@@ -1,4 +1,4 @@
-# Pancake 🥞
+# BorderLine 🥞
 
 Find the mystery country on the globe. Every guess lights up with a colour showing how close you are — the warmer, the nearer.
 
