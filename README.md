@@ -11,7 +11,7 @@ Pure HTML, CSS and JavaScript — no frameworks, no build step.
   found in 1 = 1,000; found in n = (11 − n) × 100 + aim (0–99, how close your guesses before the answer
   landed on average); not found = 0–99 from your closest guess. The server works the points out itself
   from the guess list (`supabase/021_scoring.sql`); the app's own number is only for display.
-- **Classic** — a random country, unlimited guesses, scored like the Daily. A weekly global Classic
+- **Normal** — a random country, unlimited guesses, scored like the Daily. A weekly global Classic
   leaderboard (Monday 00:00 UTC) ranks the total of each player's best 10 finds that week, scored on the
   server from the synced guess lists (`supabase/022_classic_leaderboard.sql`). No sharing: that's the
   Daily's. (Classic and Endless were merged; old Endless games count as Classic.)
