@@ -1,0 +1,15 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>GameKatta sign-in</title>
+<!--
+  Tatva and the other GameKatta games open this page once per browser, hidden, before they make
+  someone a new guest. A Borderline player's sign-in lives in this site's localStorage, which
+  only this site can read; this moves it into the cookie every *.gamekatta.com site shares
+  (gk-session.js), then tells the game it can go on. It sends nothing else, and no tokens.
+-->
+<script src="gk-session.js"></script>
+<script>
+  try { gkSession.adoptLocal(); } catch (e) {}
+  if (window.parent !== window) window.parent.postMessage({ gk: 'bridge' }, '*');
+</script>

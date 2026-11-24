@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="14 14 172 172" width="32" height="32"><style>.ink{stroke:#111118}@media (prefers-color-scheme:dark){.ink{stroke:#f2f2f7}}</style><defs><radialGradient id="heat" cx="58%" cy="44%" r="62%"><stop offset="0" stop-color="#ffd60a"/><stop offset=".15" stop-color="#ffd60a"/><stop offset="1" stop-color="#00c2ff"/></radialGradient><clipPath id="globe"><circle cx="100" cy="100" r="78"/></clipPath></defs>
+<circle class="ink" cx="100" cy="100" r="76" fill="none" stroke-width="12"/>
+<g transform="translate(100 100) scale(.78) translate(-104 -100)"><path d="M70 40 L98 34 L114 50 L140 44 L160 66 L152 90 L168 114 L146 150 L120 144 L102 166 L76 154 L64 128 L40 116 L48 88 L38 64 Z" fill="url(#heat)"/></g></svg>

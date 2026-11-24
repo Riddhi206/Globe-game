@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" class="needle-char mood-neutral" role="img" aria-label="Needle, a brass compass with one eye">
+  <!--
+    Needle — story mode companion. Inline this SVG (don't <img> it) so CSS can
+    drive her. Moods are classes on the root: mood-neutral | mood-smug |
+    mood-worried | mood-excited | mood-sad | mood-glitch (CSS: 03-animation-audio.md §3).
+    Named parts:
+      #nd-needle   the spinning compass needle (rotate around 60 70)
+      #nd-lid      upper eyelid (translateY to close)
+      #nd-brow     brow line (rotate for worried / smug)
+      #nd-pupil    pupil (scale for excited / worried)
+      #nd-sparkle  excited sparkle (hidden by default)
+      #nd-tear     sad tear (hidden by default)
+      #nd-crack    glitch / chapter-7 crack (hidden by default)
+  -->
+  <defs>
+    <radialGradient id="nd-brass" cx="40%" cy="35%" r="70%">
+      <stop offset="0"   stop-color="#f6dd95"/>
+      <stop offset="0.45" stop-color="#c9a04a"/>
+      <stop offset="1"   stop-color="#7d5e1f"/>
+    </radialGradient>
+    <radialGradient id="nd-glass" cx="45%" cy="40%" r="65%">
+      <stop offset="0"   stop-color="#fbf7ec"/>
+      <stop offset="1"   stop-color="#e6dcc3"/>
+    </radialGradient>
+    <clipPath id="nd-eye-clip">
+      <ellipse cx="60" cy="72" rx="20" ry="15"/>
+    </clipPath>
+  </defs>
+
+  <!-- Bail ring (the loop a compass hangs from) -->
+  <circle cx="60" cy="14" r="8" fill="none" stroke="url(#nd-brass)" stroke-width="4"/>
+  <rect x="55" y="18" width="10" height="9" rx="2" fill="url(#nd-brass)"/>
+
+  <!-- Brass case -->
+  <circle cx="60" cy="72" r="44" fill="url(#nd-brass)"/>
+  <circle cx="60" cy="72" r="44" fill="none" stroke="#5e4614" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Glass face -->
+  <circle cx="60" cy="72" r="36" fill="url(#nd-glass)"/>
+  <!-- Compass rose ticks -->
+  <g stroke="#8a7a55" stroke-width="1.2" stroke-linecap="round" opacity="0.7">
+    <line x1="60" y1="38" x2="60" y2="44"/><line x1="60" y1="100" x2="60" y2="106"/>
+    <line x1="26" y1="72" x2="32" y2="72"/><line x1="88" y1="72" x2="94" y2="72"/>
+  </g>
+  <text x="60" y="47" text-anchor="middle" font-family="Georgia, serif" font-size="8" fill="#8a7a55" opacity="0.8">N?</text>
+
+  <!-- The needle, behind the eye. Spins via CSS (transform-origin 60px 72px). -->
+  <g id="nd-needle">
+    <path d="M60 40 L65 72 L60 76 L55 72 Z" fill="#e5484d"/>
+    <path d="M60 104 L65 72 L60 68 L55 72 Z" fill="#f4f1ea" stroke="#b9ae93" stroke-width="0.6"/>
+  </g>
+
+  <!-- The eye -->
+  <ellipse cx="60" cy="72" rx="20" ry="15" fill="#ffffff" stroke="#3a2f1a" stroke-width="1.6"/>
+  <g clip-path="url(#nd-eye-clip)">
+    <g id="nd-pupil">
+      <circle cx="60" cy="73" r="8"   fill="#1b1611"/>
+      <circle cx="63" cy="70" r="2.4" fill="#ffffff"/>
+    </g>
+    <!-- Upper lid: sits above the eye, slides down to blink / squint -->
+    <rect id="nd-lid" x="38" y="42" width="44" height="16" fill="#c9a04a"/>
+  </g>
+  <path id="nd-brow" d="M41 56 Q60 49 79 56" fill="none" stroke="#3a2f1a" stroke-width="2.4" stroke-linecap="round"/>
+
+  <!-- Mood extras -->
+  <g id="nd-sparkle" opacity="0">
+    <path d="M92 40 l2 5 l5 2 l-5 2 l-2 5 l-2-5 l-5-2 l5-2 z" fill="#ffd36b"/>
+  </g>
+  <path id="nd-tear" d="M75 86 q3 6 0 9 q-3-3 0-9 z" fill="#7fb7ff" opacity="0"/>
+  <path id="nd-crack" d="M44 50 L54 63 L49 70 L62 84 L58 92" fill="none" stroke="#1b1611" stroke-width="1.4" opacity="0"/>
+
+  <!-- Glass glare -->
+  <path d="M38 54 Q46 42 60 40" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+</svg>

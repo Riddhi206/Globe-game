@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GameKatta analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --border: rgba(11,11,11,0.10);
+    --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781; --grid: #e1e0d9; --axis: #c3c2b7;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #9b5de5;
+    --good: #006300; --bad: #d03b3b;
+    --wash: rgba(42,120,214,0.08);
+    --heat: 42,120,214;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --border: rgba(255,255,255,0.10);
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #a879ec;
+      --good: #34c759; --bad: #e66767;
+      --wash: rgba(57,135,229,0.12);
+      --heat: 57,135,229;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: var(--page); border-bottom: 1px solid var(--border); }
+  .bar { max-width: 1280px; margin: 0 auto; padding: 12px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  h1 { font-size: 18px; margin: 0 12px 0 0; }
+  .badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #fab219; color: #0b0b0b; }
+  .spacer { flex: 1; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg button, .tabs button, .btn { font: inherit; border: 0; background: none; color: var(--ink-2); cursor: pointer; padding: 6px 12px; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--page); font-weight: 600; }
+  .btn { border: 1px solid var(--border); border-radius: 8px; }
+  .btn:hover, .seg button:hover:not([aria-pressed="true"]) { background: var(--wash); }
+  .updated { color: var(--muted); font-size: 12px; }
+  .tabs { max-width: 1280px; margin: 0 auto; padding: 0 12px; display: flex; gap: 2px; overflow-x: auto; }
+  .tabs button { padding: 10px 12px; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--s1); font-weight: 600; }
+  main { max-width: 1280px; margin: 0 auto; padding: 20px; }
+  section[hidden] { display: none; }
+  h3.group { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 8px 0 10px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 960px) { .grid, .grid.three { grid-template-columns: minmax(0, 1fr); } }
+  .sub-h { margin: 18px 4px 8px; font-size: .95rem; color: var(--ink-2); font-weight: 600; }
+  .tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 16px; }
+  .tile, .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .tile { padding: 14px 16px; }
+  .tile .label { color: var(--ink-2); font-size: 12px; }
+  .tile .value { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .tile .sub { color: var(--muted); font-size: 12px; }
+  .delta { font-size: 12px; font-weight: 700; margin-left: 6px; }
+  .delta.up { color: var(--good); } .delta.down { color: var(--bad); } .delta.flat { color: var(--muted); }
+  .card { padding: 16px; min-width: 0; }
+  .card h2 { font-size: 14px; margin: 0 0 2px; }
+  .card p.note { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
+  .chart { position: relative; height: 260px; }
+  .chart.tall { height: 360px; }
+  .wide { grid-column: 1 / -1; }
+  .table-wrap { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { color: var(--ink-2); font-weight: 600; font-size: 12px; position: sticky; top: 0; background: var(--surface); }
+  td.num, th.num { text-align: right; }
+  tr:hover td { background: var(--wash); }
+  td.cell-heat { text-align: right; }
+  .details { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--ink-2); max-width: 520px; overflow-wrap: anywhere; }
+  .empty { color: var(--muted); padding: 24px 0; text-align: center; }
+  .error { background: var(--surface); border: 1px solid var(--bad); color: var(--bad); padding: 16px; border-radius: 12px; margin-bottom: 16px; white-space: pre-wrap; }
+  input[type="search"] { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); width: 300px; margin-bottom: 12px; }
+  .pct { color: var(--muted); font-size: 12px; margin-left: 4px; }
+  /* weekday × hour heatmap */
+  .heat { display: grid; grid-template-columns: 34px repeat(24, minmax(0, 1fr)); gap: 2px; font-size: 11px; color: var(--muted); }
+  .heat span { height: 22px; border-radius: 3px; display: grid; place-items: center; }
+  .heat .hcell { background: rgba(var(--heat), var(--a)); }
+  /* funnel */
+  .funnel { display: flex; flex-direction: column; gap: 6px; }
+  .frow { display: grid; grid-template-columns: 210px 1fr 110px; gap: 10px; align-items: center; }
+  .ftrack { height: 26px; background: var(--grid); border-radius: 6px; overflow: hidden; }
+  .ftrack i { display: block; height: 100%; background: var(--s1); border-radius: 6px; }
+  .fnum { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .fnum small { color: var(--muted); font-weight: 400; }
+  .profile { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 12px; }
+  .profile b { font-size: 16px; }
+  td.feedback-msg { white-space: pre-wrap; min-width: 280px; max-width: 520px; }
+  /* export menu */
+  .export { position: relative; }
+  .export summary { list-style: none; cursor: pointer; font-weight: 600; color: var(--ink); }
+  .export summary::-webkit-details-marker { display: none; }
+  .export-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 5; width: 320px; padding: 8px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    display: flex; flex-direction: column; gap: 4px; }
+  .export-menu button { font: inherit; text-align: left; border: 0; background: none; color: var(--ink); cursor: pointer;
+    padding: 9px 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 2px; font-weight: 600; }
+  .export-menu button:hover { background: var(--wash); }
+  .export-menu button:disabled { opacity: 0.5; cursor: wait; }
+  .export-menu small { color: var(--muted); font-weight: 400; font-size: 12px; }
+  .export-menu label { display: flex; gap: 8px; align-items: center; padding: 8px 10px 2px; color: var(--ink-2); border-top: 1px solid var(--grid); margin-top: 4px; }
+  .export-menu .note { color: var(--muted); font-size: 12px; margin: 0; padding: 0 10px 4px; }
+  .snapshot { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--wash); color: var(--s1); }
+  /* PDF: every tab, one after another, light theme */
+  .print-only { display: none; }
+  body.printing header { display: none; }
+  body.printing main { max-width: 1000px; padding: 0; }
+  body.printing .print-only { display: block; }
+  body.printing .table-wrap { max-height: none; overflow: visible; }
+  body.printing th { position: static; }
+  body.printing section[data-panel="live"] { display: none; }
+  body.printing .panel-title { font-size: 20px; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--s1); }
+  body.printing section + section { break-before: page; }
+  /* a chart, a tile row, a funnel never split; a card may (long tables run on), keeping its title with it */
+  body.printing .chart, body.printing .tile, body.printing .tiles, body.printing .funnel, body.printing .heat { break-inside: avoid; }
+  body.printing .card h2, body.printing .card p.note { break-after: avoid; }
+  body.printing .chart { height: 220px; }
+  body.printing .chart.tall { height: 300px; }
+  body.printing .grid { gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.printing .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.printing { background: #fff; }
+  body.printing tr { break-inside: avoid; }
+  .print-head { margin-bottom: 18px; }
+  .print-head h1 { font-size: 24px; margin: 0; }
+  .print-head p { margin: 4px 0 0; color: var(--ink-2); }
+  @page { size: A4 landscape; margin: 10mm; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tr:hover td { background: none; }
+  }
+  /* GameKatta page */
+  a.switch { color: var(--ink-2); text-decoration: none; padding: 6px 12px; font-weight: 600; }
+  a.switch.on { background: var(--ink); color: var(--page); }
+  a.switch:hover:not(.on) { background: var(--wash); }
+  .site-pick { color: var(--ink-2); display: inline-flex; gap: 6px; align-items: center; }
+  .site-pick select { font: inherit; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+  .note-bar { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
+  .tile .label .pct { margin-left: 2px; }
+  .tile .value .delta { font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <nav class="seg" aria-label="Dashboard"><a class="switch" href="/">🌍 Borderline</a><a class="switch on" href="/gk" aria-current="page">🎲 GameKatta</a></nav>
+    <span id="demo" class="badge" hidden>DEMO DATA</span>
+    <span class="spacer"></span>
+    <label class="site-pick">Site <select id="site"></select></label>
+    <div class="seg" role="group" aria-label="Time range">
+      <button data-range="24h">24 hours</button><button data-range="7d">7 days</button><button data-range="30d">30 days</button><button data-range="90d">90 days</button>
+    </div>
+    <button id="refresh" class="btn">Refresh</button>
+    <span id="updated" class="updated"></span>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="overview">Overview</button>
+    <button role="tab" data-tab="acquisition">Acquisition</button>
+    <button role="tab" data-tab="activation">Activation</button>
+    <button role="tab" data-tab="retention">Retention</button>
+    <button role="tab" data-tab="engagement">Engagement</button>
+    <button role="tab" data-tab="hatke">Hatke</button>
+    <button role="tab" data-tab="tatva">Tatva</button>
+    <button role="tab" data-tab="rooms">Room games</button>
+    <button role="tab" data-tab="sharing">Hub &amp; sharing</button>
+    <button role="tab" data-tab="tech">Tech &amp; errors</button>
+    <button role="tab" data-tab="live">Live</button>
+  </nav>
+</header>
+
+<main>
+  <div id="error" class="error" hidden></div>
+  <p class="note-bar">Players are random ids, one per browser, shared by every gamekatta.com site since 17 Oct. Before that each site had its own, so people from then count once per site until they visit again. Our own testing (<code>?gk_test=1</code>, automated browsers, the 16 Oct playtest) is left out.</p>
+
+  <section data-panel="overview">
+    <h3 class="group">Growth gates · new players in this range</h3>
+    <div class="tiles" id="gate-tiles"></div>
+    <h3 class="group">This range</h3>
+    <div class="tiles" id="kpi-tiles"></div>
+    <h3 class="group">Right now</h3>
+    <div class="tiles" id="total-tiles"></div>
+    <div class="grid">
+      <div class="card wide"><h2>Active players per day</h2><p class="note">Unique players with any activity that day (IST) · new = first visit that day</p><div class="chart"><canvas id="c-active"></canvas></div></div>
+      <div class="card"><h2>Players per day, by site</h2><div class="chart"><canvas id="c-sites"></canvas></div></div>
+      <div class="card"><h2>Games finished and shares per day</h2><div class="chart"><canvas id="c-finishes"></canvas></div></div>
+      <div class="card wide"><h2>Games side by side</h2><p class="note">This range · finish rate = finishes ÷ starts · share rate = shares ÷ finishes</p><div class="table-wrap" id="t-games"></div></div>
+      <div class="card wide"><h2>When people play</h2><p class="note">Visits by weekday and hour (IST) · darker = busier</p><div id="heatmap"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="acquisition" hidden>
+    <div class="tiles" id="acq-tiles"></div>
+    <div class="grid">
+      <div class="card"><h2>New players by channel</h2><p class="note">From each player's first visit: share links, cafe QRs, next-game links, campaigns, referring site</p><div class="chart tall"><canvas id="c-channels"></canvas></div></div>
+      <div class="card"><h2>Channel quality</h2><p class="note">Do players from each channel play and come back?</p><div class="table-wrap" id="t-channels"></div></div>
+      <div class="card"><h2>Cafe QR codes</h2><p class="note">Every scan of a /c/&lt;cafe&gt; code in this range</p><div class="table-wrap" id="t-cafes"></div></div>
+      <div class="card"><h2>Campaigns</h2><p class="note">First visits with utm_source / utm_campaign</p><div class="table-wrap" id="t-campaigns"></div></div>
+      <div class="card"><h2>Referring sites</h2><div class="chart"><canvas id="c-refs"></canvas></div></div>
+    </div>
+  </section>
+
+  <section data-panel="activation" hidden>
+    <div class="tiles" id="act-tiles"></div>
+    <div class="card"><h2>New-player funnel</h2><p class="note">Of the players whose first visit was in this range, how many reached each step (ever)</p><div class="funnel" id="funnel"></div></div>
+  </section>
+
+  <section data-panel="retention" hidden>
+    <div class="tiles" id="ret-tiles"></div>
+    <div class="grid">
+      <div class="card wide"><h2>Players coming back</h2><p class="note">Of the players who first came on a day, % active again 1 and 7 days later</p><div class="chart"><canvas id="c-retention"></canvas></div></div>
+      <div class="card wide"><h2>Daily cohorts</h2><p class="note">% of each day's new players active on day 1, 3, 7, 14 and 30 · blank = too early to know · iPhones forget a site after 7 days away, so day 14 and 30 read low</p><div class="table-wrap" id="t-cohorts"></div></div>
+      <div class="card wide"><h2>Weekly cohorts</h2><p class="note">% of each week's new players active during week 1, 2, 3, 4 and 8 after</p><div class="table-wrap" id="t-cohorts-weekly"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="engagement" hidden>
+    <div class="tiles" id="eng-tiles"></div>
+    <div class="grid">
+      <div class="card"><h2>Visit length</h2><p class="note">Time on screen per visit</p><div class="chart"><canvas id="c-sessions"></canvas></div></div>
+      <div class="card"><h2>Average visit per day</h2><div class="chart"><canvas id="c-session-days"></canvas></div></div>
+      <div class="card"><h2>Daily participation</h2><p class="note">% of each day's active players who finished a daily</p><div class="chart"><canvas id="c-participation"></canvas></div></div>
+      <div class="card"><h2>Live daily streaks</h2><p class="note">Players whose streak is still alive (finished a daily today or yesterday)</p><div class="chart"><canvas id="c-streaks"></canvas></div></div>
+    </div>
+  </section>
+
+  <section data-panel="hatke" hidden>
+    <div class="tiles" id="hatke-tiles"></div>
+    <div class="grid">
+      <div class="card wide"><h2>Each daily dive</h2><p class="note">Finished dailies · the tier mix counts every prompt's find</p><div class="table-wrap" id="t-hatke-days"></div></div>
+      <div class="card wide"><h2>What players say, per prompt</h2><p class="note">The answers behind real rarity: if everyone says it, it isn't “hatke”. Top answers with how often they were given.</p><div class="table-wrap" id="t-hatke-prompts"></div></div>
+      <div class="card wide"><h2>Answers the bank doesn't have</h2><p class="note">Typed, rejected, most-tried first. Add the good ones to the bank (or a zinger for the wrong ones).</p><div class="table-wrap" id="t-hatke-misses"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="tatva" hidden>
+    <div class="tiles" id="tatva-tiles"></div>
+    <div class="grid">
+      <div class="card"><h2>Darts needed</h2><p class="note">Finished games · X = Anu won</p><div class="chart"><canvas id="c-darts"></canvas></div></div>
+      <div class="card"><h2>How hard was each daily?</h2><div class="table-wrap" id="t-tatva-days"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="rooms" hidden>
+    <p class="empty" id="rooms-none" hidden>No room-game activity in this range. Tic Tac Chai, Gully Cricket, Pataakha and Dimaag Ka Dahi report here once they're live.</p>
+    <div class="grid">
+      <div class="card wide"><h2>Rooms by game</h2><p class="note">Taps on Create, Join, Start and Solo · mode picks for the two duel games</p><div class="table-wrap" id="t-rooms"></div></div>
+      <div class="card"><h2>Rooms made vs joined</h2><p class="note">Joins per room made is the invite payoff</p><div class="chart"><canvas id="c-rooms"></canvas></div></div>
+    </div>
+  </section>
+
+  <section data-panel="sharing" hidden>
+    <div class="tiles" id="share-tiles"></div>
+    <div class="grid">
+      <div class="card"><h2>Which shares bring players</h2><p class="note">Shares tapped, visits through shared links, and new players · new per 100 shares is the payoff (gate: 30)</p><div class="table-wrap" id="t-sharing"></div></div>
+      <div class="card"><h2>Hub: where people go</h2><p class="note">Taps on a game from gamekatta.com</p><div class="table-wrap" id="t-hub"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="tech" hidden>
+    <div class="tiles" id="tech-tiles"></div>
+    <div class="grid">
+      <div class="card wide"><h2>Errors</h2><p class="note">Uncaught JavaScript errors (5 per visit at most) · fix the top rows first</p><div class="table-wrap" id="t-errors"></div></div>
+      <div class="card wide"><h2>Load time</h2><p class="note">Milliseconds until the page finished loading · p90 = the slowest 1 in 10</p><div class="table-wrap" id="t-load"></div></div>
+    </div>
+    <div class="grid three" style="margin-top:16px">
+      <div class="card"><h2>Devices</h2><div class="chart"><canvas id="c-devices"></canvas></div></div>
+      <div class="card"><h2>Operating systems</h2><div class="chart"><canvas id="c-os"></canvas></div></div>
+      <div class="card"><h2>Browsers</h2><div class="chart"><canvas id="c-browsers"></canvas></div></div>
+    </div>
+  </section>
+
+  <section data-panel="live" hidden>
+    <div class="card" style="margin-bottom:16px">
+      <h2>Look up a player</h2><p class="note">By the start of their player id (from the table below)</p>
+      <input type="search" id="player-q" placeholder="e.g. 1a2b3c4d" />
+      <div id="player-out"></div>
+    </div>
+    <div class="card"><h2>Latest events</h2><p class="note">The last 200, newest first</p>
+      <input type="search" id="live-filter" placeholder="Filter by event, site or details" />
+      <div class="table-wrap" id="t-recent"></div></div>
+  </section>
+</main>
+
+<script>
+// gk.html — GameKatta's page of the local dashboard (server.mjs → /gk, numbers from gk-queries.mjs).
+// The styles and chart helpers are copied from index.html so both pages look and behave the same.
+const $ = s => document.querySelector(s);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt = n => n == null || Number.isNaN(+n) ? '—' : Number(n).toLocaleString('en-IN');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+const pctOrNull = (a, b) => a == null || !b ? null : Math.round(100 * a / b);
+const mins = s => s == null ? '—' : s < 60 ? `${Math.round(s)}s` : `${Math.floor(s / 60)}m ${String(Math.round(s % 60)).padStart(2, '0')}s`;
+const shortDay = d => new Date(d + (String(d).length === 10 ? 'T00:00:00' : '')).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+
+// An exported HTML file carries its data in window.SNAPSHOT: { generatedAt, names, ranges: { '7d': body, … } }
+const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+                set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+let range = store.get('dash-range') || '7d';
+let tab   = store.get('dash-tab') || 'overview';
+let last  = null;
+const charts = {};
+
+// ---------------- Charts ----------------
+function baseOptions({ horizontal = false, legend = false, pctAxis = false, stacked = false, secs = false } = {}) {
+  const grid = css('--grid'), muted = css('--muted');
+  const valueAxis = {
+    beginAtZero: true, stacked, border: { display: false }, grid: { color: grid },
+    ticks: { color: muted, precision: 0, callback: v => pctAxis ? v + '%' : secs ? mins(v) : fmt(v) },
+    ...(pctAxis ? { max: 100 } : {}),
+  };
+  const catAxis = { stacked, grid: { display: false }, border: { color: css('--axis') }, ticks: { color: muted, autoSkipPadding: 12, maxRotation: 0 } };
+  return {
+    responsive: true, maintainAspectRatio: false, indexAxis: horizontal ? 'y' : 'x',
+    ...(document.body.classList.contains('printing') ? { devicePixelRatio: 2 } : {}),
+    animation: false,   // charts on hidden tabs would otherwise animate in from the left when shown
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: legend, position: 'top', align: 'start', labels: { color: css('--ink-2'), boxWidth: 12, boxHeight: 12, usePointStyle: true, pointStyle: 'rectRounded' } },
+      tooltip: { backgroundColor: css('--surface'), titleColor: css('--ink'), bodyColor: css('--ink-2'), borderColor: css('--border'), borderWidth: 1, padding: 10,
+                 callbacks: { label: ctx => { const v = horizontal ? ctx.parsed.x : ctx.parsed.y; return ` ${ctx.dataset.label}: ${secs ? mins(v) : fmt(v)}${pctAxis ? '%' : ''}`; } } },
+    },
+    scales: horizontal ? { x: valueAxis, y: catAxis } : { x: catAxis, y: valueAxis },
+  };
+}
+function barDataset(label, data, color) {
+  return { label, data, backgroundColor: color, hoverBackgroundColor: color, borderRadius: 4, borderSkipped: 'start', borderWidth: 0,
+           maxBarThickness: 36, categoryPercentage: 0.8, barPercentage: 0.9 };
+}
+function lineDataset(label, data, color) {
+  return { label, data, borderColor: color, backgroundColor: color, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5,
+           pointHoverBorderWidth: 2, pointHoverBorderColor: css('--surface'), tension: 0, fill: false, spanGaps: true };
+}
+function draw(id, type, labels, datasets, opts) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }   // a destroyed chart left here would break the next resize
+  const el = document.getElementById(id);
+  const hasData = datasets.some(d => d.data.some(v => v));
+  el.parentElement.querySelector('.empty')?.remove();
+  el.hidden = !hasData;
+  if (!hasData) { el.insertAdjacentHTML('afterend', '<div class="empty">No data in this range yet</div>'); return; }
+  charts[id] = new Chart(el, { type, data: { labels, datasets }, options: opts });
+}
+const hbar = (id, rows, valueKey = 'players', label = 'Players') =>
+  draw(id, 'bar', rows.map(r => r.label || '(unknown)'), [barDataset(label, rows.map(r => +r[valueKey]), css('--s1'))], baseOptions({ horizontal: true }));
+
+// ---------------- Tables, tiles, deltas ----------------
+function table(el, cols, rows) {
+  if (!rows.length) { $(el).innerHTML = '<div class="empty">No data in this range yet</div>'; return; }
+  $(el).innerHTML = `<table><thead><tr>${cols.map(c => `<th class="${c.num ? 'num' : ''}">${c.label}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${cols.map(c => `<td class="${c.num ? 'num' : ''}${c.cls ? ' ' + c.cls : ''}"${c.style ? ` style="${c.style(r)}"` : ''}>${c.html ? c.html(r) : esc(c.num ? fmt(r[c.key]) : r[c.key])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function tiles(el, items) {
+  $(el).innerHTML = items.map(t => `<div class="tile"><div class="label">${t.label}</div><div class="value">${t.value}${t.delta || ''}</div>${t.sub ? `<div class="sub">${t.sub}</div>` : ''}</div>`).join('');
+}
+// ▲ / ▼ against the previous period of the same length
+function delta(cur, prev, { lowerIsBetter = false } = {}) {
+  cur = +cur || 0; prev = +prev || 0;
+  if (!prev && !cur) return '';
+  if (!prev) return '<span class="delta up">new</span>';
+  const d = Math.round(100 * (cur - prev) / prev);
+  const good = lowerIsBetter ? d < 0 : d > 0;
+  return `<span class="delta ${d === 0 ? 'flat' : good ? 'up' : 'down'}" title="vs previous period">${d > 0 ? '▲' : d < 0 ? '▼' : '='} ${Math.abs(d)}%</span>`;
+}
+// A table cell shaded by how high its % is
+const heatCell = (n, total) => n == null ? '' : `${pct(n, total)}%`;
+const heatStyle = (n, total) => n == null ? '' : `background: rgba(var(--heat), ${(pct(n, total) / 100 * 0.85).toFixed(2)})`;
+
+// ---------------- GameKatta ----------------
+const SITE_NAMES = { all: 'All sites', hub: 'Hub (gamekatta.com)', hatke: 'Hatke', tatva: 'Tatva', tictacchai: 'Tic Tac Chai', cricket: 'Gully Cricket', pataakha: 'Pataakha', dahi: 'Dimaag Ka Dahi' };
+const siteName = s => SITE_NAMES[s] || s || '(unknown)';
+const TIER_NAMES = { s: '🪙 Sabko Pata', a: '🤓 Ati Shahana', t: '🥈 Theek Thaak', h: '🥇 Hatke', l: '💎 Lakhon Mein Ek', miss: '🕯️ Miss' };
+let site = store.get('gk-site') || 'all';
+
+// A gate tile: the number, the target, and whether we're there yet
+const gate = (label, value, target, sub, { per = '%', pending = false } = {}) => ({
+  label: `${label} <span class="pct">target ${target}${per}</span>`,
+  value: pending ? '—' : `${value}${per}<span class="delta ${value >= target ? 'up' : 'down'}">${value >= target ? '✓ met' : '✗ below'}</span>`,
+  sub,
+});
+
+function render() {
+  if (!last) return;
+  const d = last.data, s1 = css('--s1'), s2 = css('--s2'), s3 = css('--s3'), s4 = css('--s4');
+  const rangeName = { '24h': 'last 24 hours', '7d': 'last 7 days', '30d': 'last 30 days', '90d': 'last 90 days' }[last.range];
+  const cur = d.kpis.find(r => r.period === 'cur') || {}, prev = d.kpis.find(r => r.period === 'prev') || {};
+  const T = d.totals[0] || {};
+  const avgSess = r => r.timed_sessions ? r.seconds / r.timed_sessions : null;
+
+  // ---- Overview
+  const g = d.gates[0] || {};
+  tiles('#gate-tiles', [
+    gate('Finished a first game', pct(g.finished, g.new_players), 60, `${fmt(g.finished)} of ${fmt(g.new_players)} new players`, { pending: !g.new_players }),
+    gate('Back next day', pct(g.d1, g.d1_eligible), 25, `${fmt(g.d1)} of ${fmt(g.d1_eligible)} who could be`, { pending: !g.d1_eligible }),
+    gate('Back on day 7', pct(g.d7, g.d7_eligible), 10, `${fmt(g.d7)} of ${fmt(g.d7_eligible)} who could be`, { pending: !g.d7_eligible }),
+    gate('New per 100 shares', g.shares ? Math.round(100 * g.share_new / g.shares) : 0, 30, `${fmt(g.share_new)} new from ${fmt(g.shares)} shares`, { per: '', pending: !g.shares }),
+    { label: 'Reminders on <span class="pct">target 20%</span>', value: '—', sub: 'no reminders in GameKatta games yet' },
+  ]);
+  tiles('#kpi-tiles', [
+    { label: 'Players', value: fmt(cur.players), delta: delta(cur.players, prev.players), sub: `unique, ${rangeName}` },
+    { label: 'New players', value: fmt(cur.new_players), delta: delta(cur.new_players, prev.new_players), sub: 'first visit in range' },
+    { label: 'Avg daily players', value: fmt(cur.avg_dau), delta: delta(cur.avg_dau, prev.avg_dau) },
+    { label: 'Visits', value: fmt(cur.sessions), delta: delta(cur.sessions, prev.sessions), sub: `${(cur.sessions / (cur.players || 1)).toFixed(1)} per player` },
+    { label: 'Avg visit', value: mins(avgSess(cur)), delta: delta(avgSess(cur), avgSess(prev)), sub: 'time on screen' },
+    { label: 'Games finished', value: fmt(cur.finishes), delta: delta(cur.finishes, prev.finishes), sub: `${fmt(cur.starts)} started` },
+    { label: 'Shares', value: fmt(cur.shares), delta: delta(cur.shares, prev.shares) },
+    { label: 'New from shared links', value: pct(cur.share_new, cur.new_players) + '%', sub: `${fmt(cur.share_new)} players` },
+    { label: 'Errors', value: fmt(cur.errors), delta: delta(cur.errors, prev.errors, { lowerIsBetter: true }) },
+  ]);
+  tiles('#total-tiles', [
+    { label: 'Today', value: fmt(T.dau_today), sub: 'players so far (IST)' },
+    { label: 'Last 7 days', value: fmt(T.wau) },
+    { label: 'Last 30 days', value: fmt(T.mau) },
+    { label: 'Stickiness', value: pct(cur.avg_dau, T.mau) + '%', sub: 'avg daily ÷ monthly' },
+    { label: 'All-time players', value: fmt(T.all_time) },
+  ]);
+  const days = d.days.map(r => shortDay(r.day));
+  draw('c-active', 'bar', days, [barDataset('Returning', d.days.map(r => Math.max(0, r.active - r.new_players)), s1), barDataset('New', d.days.map(r => +r.new_players), s2)],
+       baseOptions({ legend: true, stacked: true }));
+  // Four series at most: the biggest sites, then everything else
+  const bySite = {};
+  d.daysBySite.forEach(r => { bySite[r.site] = (bySite[r.site] || 0) + +r.players; });
+  const top = Object.keys(bySite).sort((a, b) => bySite[b] - bySite[a]);
+  const shown = top.length > 4 ? top.slice(0, 3) : top;
+  const series = [...shown, ...(top.length > 4 ? ['other'] : [])];
+  const dayKeys = d.days.map(r => r.day);
+  draw('c-sites', 'bar', days, series.map((s, i) => barDataset(s === 'other' ? 'Other sites' : siteName(s),
+    dayKeys.map(day => d.daysBySite.filter(r => String(r.day).slice(0, 10) === String(day).slice(0, 10) && (s === 'other' ? !shown.includes(r.site) : r.site === s)).reduce((a, r) => a + +r.players, 0)),
+    s === 'other' ? css('--muted') : [s1, s2, s3, s4][i])), baseOptions({ legend: true, stacked: true }));
+  draw('c-finishes', 'line', days, [lineDataset('Finished', d.days.map(r => +r.finishes), s1), lineDataset('Shared', d.days.map(r => +r.shares), s2)], baseOptions({ legend: true }));
+  table('#t-games', [
+    { label: 'Site', html: r => esc(siteName(r.site)) }, { label: 'Players', key: 'players', num: true }, { label: 'Played', key: 'gamers', num: true },
+    { label: 'Starts', key: 'starts', num: true }, { label: 'Finishes', key: 'finishes', num: true },
+    { label: 'Finish rate', num: true, html: r => r.starts && r.finishes ? pct(r.finishes, r.starts) + '%' : '—' },   // room games only send starts
+    { label: 'Shares', key: 'shares', num: true }, { label: 'Share rate', num: true, html: r => r.finishes ? pct(r.shares, r.finishes) + '%' : '—' },
+    { label: 'Rooms', key: 'rooms', num: true }, { label: 'Avg visit', num: true, html: r => mins(r.avg_sec) }, { label: 'Errors', key: 'errors', num: true },
+  ], d.games);
+  renderHeatmap(d.heatmap);
+
+  // ---- Acquisition
+  const ch = d.channels;
+  tiles('#acq-tiles', [
+    { label: 'New players', value: fmt(cur.new_players), delta: delta(cur.new_players, prev.new_players) },
+    { label: 'From shared results', value: fmt(cur.share_new), sub: `${pct(cur.share_new, cur.new_players)}% of new players` },
+    { label: 'From cafe QRs', value: fmt(ch.filter(r => r.channel.startsWith('Cafe')).reduce((a, r) => a + r.players, 0)), sub: `${fmt(d.cafes.reduce((a, r) => a + r.scans, 0))} scans` },
+    { label: 'Back next day', value: pct(ch.reduce((a, r) => a + r.d1, 0), ch.reduce((a, r) => a + r.d1_eligible, 0)) + '%', sub: 'all new players' },
+  ]);
+  hbar('c-channels', ch.map(r => ({ label: r.channel, players: r.players })));
+  table('#t-channels', [
+    { label: 'Channel', key: 'channel' }, { label: 'New', key: 'players', num: true },
+    { label: 'Played', num: true, html: r => pct(r.played, r.players) + '%' },
+    { label: 'Back next day', num: true, html: r => r.d1_eligible ? pct(r.d1, r.d1_eligible) + '%' : '—', style: r => r.d1_eligible ? heatStyle(r.d1, r.d1_eligible) : '' },
+  ], ch);
+  table('#t-cafes', [{ label: 'Cafe', key: 'cafe' }, { label: 'Site', html: r => esc(siteName(r.site)) }, { label: 'Scans', key: 'scans', num: true },
+    { label: 'New', key: 'new_players', num: true }, { label: 'Played', key: 'played', num: true }, { label: 'Last scan', key: 'last_scan' }], d.cafes);
+  table('#t-campaigns', [{ label: 'Campaign', key: 'campaign' }, { label: 'Source', key: 'source' }, { label: 'Medium', key: 'medium' }, { label: 'New players', key: 'players', num: true }], d.campaigns);
+  hbar('c-refs', d.referrers);
+
+  // ---- Activation
+  const a = d.activation[0] || {};
+  tiles('#act-tiles', [
+    { label: 'New players', value: fmt(a.opened) },
+    { label: 'Started a game', value: pct(a.started, a.opened) + '%' },
+    { label: 'Finished a game', value: pct(a.finished, a.opened) + '%', sub: 'daily games only send finishes' },
+    { label: 'Time to first finish', value: a.median_min_to_finish == null ? '—' : `${a.median_min_to_finish} min`, sub: 'median' },
+    { label: 'Back next day', value: pct(a.back_d1, a.d1_eligible) + '%', sub: `${fmt(a.back_d1)} of ${fmt(a.d1_eligible)}` },
+  ]);
+  const steps = [['Opened a game', a.opened], ['Started', a.started], ['Finished one', a.finished], ['Finished a second', a.second],
+                 ['Shared', a.shared], ['Made or joined a room', a.roomed], ['Back next day', a.back_d1, a.d1_eligible]];
+  $('#funnel').innerHTML = a.opened ? steps.map(([label, n, of]) => {
+    const base = of ?? a.opened;
+    return `<div class="frow"><span>${label}</span><div class="ftrack"><i style="width:${pct(n, base)}%"></i></div><span class="fnum">${pct(n, base)}% <small>${fmt(n)}${of != null ? ` of ${fmt(of)}` : ''}</small></span></div>`;
+  }).join('') : '<div class="empty">No new players in this range yet</div>';
+
+  // ---- Retention
+  const kept = d.churn[0] || {};
+  const ret = d.cohorts.slice().reverse();
+  const sum = (k, e) => ret.reduce((x, r) => x + (r[k] == null ? 0 : +r[k]), 0) / Math.max(1, ret.filter(r => r[k] != null).reduce((x, r) => x + +r.new_players, 0));
+  tiles('#ret-tiles', [
+    { label: 'Day 1', value: Math.round(100 * sum('d1')) + '%', sub: 'cohorts in the table' },
+    { label: 'Day 7', value: Math.round(100 * sum('d7')) + '%' },
+    { label: 'Day 30', value: ret.some(r => r.d30 != null) ? Math.round(100 * sum('d30')) + '%' : '—' },
+    { label: 'Last week kept', value: pct(kept.kept, kept.last_week) + '%', sub: `${fmt(kept.kept)} of ${fmt(kept.last_week)} back this week` },
+  ]);
+  draw('c-retention', 'line', ret.map(r => shortDay(r.day)),
+       [lineDataset('Back on day 1', ret.map(r => pctOrNull(r.d1, r.new_players)), s1), lineDataset('Back on day 7', ret.map(r => pctOrNull(r.d7, r.new_players)), s2)],
+       baseOptions({ legend: true, pctAxis: true }));
+  table('#t-cohorts', [
+    { label: 'First visit', html: r => esc(shortDay(r.day)) }, { label: 'New', key: 'new_players', num: true },
+    ...['d1', 'd3', 'd7', 'd14', 'd30'].map(k => ({ label: `Day ${k.slice(1)}`, cls: 'cell-heat', html: r => heatCell(r[k], r.new_players), style: r => heatStyle(r[k], r.new_players) })),
+  ], d.cohorts);
+  table('#t-cohorts-weekly', [
+    { label: 'Week of', html: r => esc(shortDay(r.week)) }, { label: 'New', key: 'new_players', num: true },
+    ...['w1', 'w2', 'w3', 'w4', 'w8'].map(k => ({ label: `Week ${k.slice(1)}`, cls: 'cell-heat', html: r => heatCell(r[k], r.new_players), style: r => heatStyle(r[k], r.new_players) })),
+  ], d.cohortsWeekly);
+
+  // ---- Engagement
+  const live = d.streaks;
+  tiles('#eng-tiles', [
+    { label: 'Avg visit', value: mins(avgSess(cur)) },
+    { label: 'Visits per player', value: (cur.sessions / (cur.players || 1)).toFixed(1) },
+    { label: 'Finishes per player who played', value: (cur.finishes / (cur.gamers || 1)).toFixed(1) },
+    { label: 'Live streaks', value: fmt(live.reduce((x, r) => x + +r.players, 0)), sub: 'finished a daily today or yesterday' },
+  ]);
+  hbar('c-sessions', d.sessionLengths, 'sessions', 'Visits');
+  draw('c-session-days', 'line', days, [lineDataset('Avg visit', d.days.map(r => r.avg_session_sec), s1)], baseOptions({ secs: true }));
+  draw('c-participation', 'line', days, [lineDataset('Finished a daily', d.days.map(r => pctOrNull(r.daily_players, r.active)), s3)], baseOptions({ pctAxis: true }));
+  const streakLabels = [...new Set(live.map(r => r.label))];
+  const streakSites = [...new Set(live.map(r => r.site))];
+  draw('c-streaks', 'bar', streakLabels, streakSites.map((st, i) => barDataset(siteName(st), streakLabels.map(l => +(live.find(r => r.site === st && r.label === l) || {}).players || 0), [s1, s2, s3, s4][i % 4])),
+       baseOptions({ legend: streakSites.length > 1, stacked: true }));
+
+  // ---- Hatke
+  const hd = d.hatkeDays;
+  const hTotal = hd.reduce((x, r) => x + +r.players, 0);
+  const tierSum = k => hd.reduce((x, r) => x + +r['t_' + k], 0), allTiers = ['s', 'a', 't', 'h', 'l', 'miss'].reduce((x, k) => x + tierSum(k), 0);
+  tiles('#hatke-tiles', [
+    { label: 'Daily dives finished', value: fmt(hTotal) },
+    { label: 'Avg score', value: hTotal ? fmt(Math.round(hd.reduce((x, r) => x + r.avg_pts * r.players, 0) / hTotal)) : '—', sub: 'out of 700' },
+    { label: 'Rare finds', value: pct(tierSum('h') + tierSum('l'), allTiers) + '%', sub: '🥇 Hatke + 💎 Lakhon Mein Ek, of all prompts' },
+    { label: 'Misses', value: pct(tierSum('miss'), allTiers) + '%', sub: 'timed out or skipped' },
+    { label: 'Answers not in the bank', value: fmt(d.hatkeMisses.reduce((x, r) => x + +r.tries, 0)), sub: `${fmt(d.hatkeMisses.length)} different` },
+  ]);
+  table('#t-hatke-days', [
+    { label: 'Dive', html: r => '#' + r.n }, { label: 'Players', key: 'players', num: true }, { label: 'Avg pts', key: 'avg_pts', num: true },
+    { label: 'Best', key: 'best', num: true }, { label: 'Avg ft', key: 'avg_ft', num: true },
+    ...['s', 'a', 't', 'h', 'l', 'miss'].map(k => ({ label: TIER_NAMES[k], num: true, cls: 'cell-heat',
+      html: r => heatCell(+r['t_' + k], ['s', 'a', 't', 'h', 'l', 'miss'].reduce((x, j) => x + +r['t_' + j], 0)),
+      style: r => heatStyle(+r['t_' + k], ['s', 'a', 't', 'h', 'l', 'miss'].reduce((x, j) => x + +r['t_' + j], 0)) })),
+  ], hd);
+  table('#t-hatke-prompts', [
+    { label: 'Prompt', key: 'prompt' }, { label: 'Rounds', key: 'rounds', num: true },
+    { label: 'Found', num: true, html: r => pct(r.found, r.rounds) + '%' }, { label: 'Rare', num: true, html: r => pct(r.rare, r.rounds) + '%' },
+    { label: 'Timed out', num: true, html: r => pct(r.timeouts, r.rounds) + '%' }, { label: 'Skipped', num: true, html: r => pct(r.skips, r.rounds) + '%' },
+    { label: 'Top answers', cls: 'details', key: 'top_answers' },
+  ], d.hatkePrompts);
+  table('#t-hatke-misses', [
+    { label: 'Prompt', key: 'prompt' }, { label: 'Typed', key: 'said' }, { label: 'Tries', key: 'tries', num: true }, { label: 'Players', key: 'players', num: true },
+    { label: 'Known wrong', html: r => r.zinger ? 'yes (zinger)' : '' },
+  ], d.hatkeMisses);
+
+  // ---- Tatva
+  const td = d.tatvaDays, tTotal = td.reduce((x, r) => x + +r.players, 0);
+  const wins = d.tatvaDarts.filter(r => r.label !== 'X').reduce((x, r) => x + +r.games, 0), allT = d.tatvaDarts.reduce((x, r) => x + +r.games, 0);
+  tiles('#tatva-tiles', [
+    { label: 'Daily games finished', value: fmt(tTotal) },
+    { label: 'Win rate', value: pct(wins, allT) + '%', sub: 'all modes' },
+    { label: 'Avg darts to win', value: wins ? (d.tatvaDarts.filter(r => r.label !== 'X').reduce((x, r) => x + r.o * r.games, 0) / wins).toFixed(1) : '—' },
+    { label: 'Used a lifeline', value: tTotal ? Math.round(td.reduce((x, r) => x + r.lifeline_pct * r.players, 0) / tTotal) + '%' : '—', sub: 'daily games' },
+  ]);
+  draw('c-darts', 'bar', d.tatvaDarts.map(r => r.label), [barDataset('Games', d.tatvaDarts.map(r => +r.games), s1)], baseOptions());
+  table('#t-tatva-days', [{ label: 'Day', html: r => '#' + r.n }, { label: 'Players', key: 'players', num: true },
+    { label: 'Won', num: true, html: r => r.win_pct + '%', cls: 'cell-heat', style: r => heatStyle(r.win_pct, 100) },
+    { label: 'Avg darts (wins)', key: 'avg_darts', num: true }, { label: 'Lifelines', num: true, html: r => r.lifeline_pct + '%' }], td);
+
+  // ---- Room games
+  $('#rooms-none').hidden = d.rooms.length > 0;
+  table('#t-rooms', [
+    { label: 'Game', html: r => esc(siteName(r.site)) }, { label: 'Rooms made', key: 'created', num: true }, { label: 'Joins', key: 'joined', num: true },
+    { label: 'Joins per room', num: true, html: r => r.created ? (r.joined / r.created).toFixed(1) : '—' },
+    { label: 'Room games', key: 'room_games', num: true }, { label: 'Players per game', key: 'per_game', num: true }, { label: 'Played to the end', key: 'room_finished', num: true },
+    { label: 'One-phone games', key: 'solo_starts', num: true }, { label: 'Finished', key: 'solo_finished', num: true },
+    { label: 'vs computer', key: 'vs_computer', num: true }, { label: 'Same phone', key: 'same_phone', num: true }, { label: 'Picked Room', key: 'room_mode', num: true },
+  ], d.rooms);
+  draw('c-rooms', 'bar', d.rooms.map(r => siteName(r.site)), [barDataset('Made', d.rooms.map(r => +r.created), s1), barDataset('Joined', d.rooms.map(r => +r.joined), s2)], baseOptions({ legend: true }));
+
+  // ---- Hub & sharing
+  const h = d.hub[0] || {};
+  const sh = d.sharing, shares = sh.reduce((x, r) => x + +r.shares, 0), shareNew = sh.reduce((x, r) => x + +r.new_players, 0);
+  tiles('#share-tiles', [
+    { label: 'Shares', value: fmt(shares), sub: `by ${fmt(sh.reduce((x, r) => x + +r.sharers, 0))} players` },
+    { label: 'Visits from shared links', value: fmt(sh.reduce((x, r) => x + +r.arrivals, 0)) },
+    { label: 'New per 100 shares', value: shares ? fmt(Math.round(100 * shareNew / shares)) : '—', sub: 'gate: 30' },
+    { label: 'Hub visitors', value: fmt(h.visitors) },
+    { label: 'Hub → a game', value: pct(h.clickers, h.visitors) + '%', sub: `${fmt(h.clickers)} tapped a game` },
+  ]);
+  table('#t-sharing', [{ label: 'Site', html: r => esc(siteName(r.site)) }, { label: 'Shares', key: 'shares', num: true }, { label: 'Visits via links', key: 'arrivals', num: true },
+    { label: 'New players', key: 'new_players', num: true }, { label: 'New per 100', num: true, html: r => r.shares ? Math.round(100 * r.new_players / r.shares) : '—' }], sh);
+  table('#t-hub', [{ label: 'Game', html: r => esc(siteName(r.label) === r.label && r.label === 'borderline' ? 'Borderline' : siteName(r.label)) },
+    { label: 'Where', html: r => r.place === 'today' ? 'Aaj ka Katta row' : 'Game card' }, { label: 'Taps', key: 'clicks', num: true }, { label: 'Players', key: 'players', num: true }], d.hubClicks);
+
+  // ---- Tech & errors
+  const inst = d.installed[0] || {};
+  tiles('#tech-tiles', [
+    { label: 'Opened from home screen', value: pct(inst.installed, inst.players) + '%', sub: `${fmt(inst.installed)} players` },
+    { label: 'Errors', value: fmt(cur.errors), sub: `${fmt(d.errors.length)} different` },
+  ]);
+  table('#t-errors', [{ label: 'Site', html: r => esc(siteName(r.site)) }, { label: 'Error', cls: 'details', key: 'msg' }, { label: 'Where', html: r => esc(`${r.src}:${r.line}`) },
+    { label: 'Times', key: 'times', num: true }, { label: 'Players', key: 'players', num: true }, { label: 'Seen on', cls: 'details', key: 'where_seen' }, { label: 'Last', key: 'last_seen' }], d.errors);
+  table('#t-load', [{ label: 'Site', html: r => esc(siteName(r.site)) }, { label: 'Device', key: 'device' }, { label: 'Loads', key: 'loads', num: true },
+    { label: 'Median', num: true, html: r => fmt(r.p50) + ' ms' }, { label: 'p90', num: true, html: r => fmt(r.p90) + ' ms' }], d.loadTimes);
+  hbar('c-devices', d.devices); hbar('c-os', d.os); hbar('c-browsers', d.browsers);
+
+  renderLive();
+}
+
+function renderHeatmap(rows) {
+  const by = {}; let max = 0;
+  for (const r of rows) { by[`${r.dow}|${r.hour}`] = +r.sessions; max = Math.max(max, +r.sessions); }
+  const daysW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  let html = '<div class="heat"><span></span>' + Array.from({ length: 24 }, (_, hr) => `<span>${hr % 3 === 0 ? hr : ''}</span>`).join('');
+  daysW.forEach((name, i) => {
+    html += `<span>${name}</span>`;
+    for (let hr = 0; hr < 24; hr++) {
+      const v = by[`${i + 1}|${hr}`] || 0;
+      html += `<span class="hcell" style="--a:${max ? (0.06 + 0.94 * v / max).toFixed(2) : 0.06}" title="${name} ${hr}:00 · ${v} visits"></span>`;
+    }
+  });
+  $('#heatmap').innerHTML = rows.length ? html + '</div>' : '<div class="empty">No data in this range yet</div>';
+}
+
+function renderLive() {
+  if (!last) return;
+  const q = $('#live-filter').value.trim().toLowerCase();
+  const rows = last.data.recent.filter(r => !q || `${r.name} ${r.site} ${r.details} ${r.player}`.toLowerCase().includes(q));
+  table('#t-recent', [{ label: 'Time (IST)', key: 'time' }, { label: 'Player', html: r => `<a href="#" data-player="${esc(r.player)}">${esc(r.player)}</a>` },
+    { label: 'Site', html: r => esc(siteName(r.site)) }, { label: 'Event', key: 'name' }, { label: 'Details', cls: 'details', key: 'details' },
+    { label: 'Device', html: r => esc([r.device, r.os].filter(Boolean).join(' · ')) }], rows);
+}
+let _lookupTimer = null;
+async function lookup() {
+  const q = $('#player-q').value.trim();
+  if (q.length < 4) { $('#player-out').innerHTML = ''; return; }
+  const res = await fetch(`/api/gk-player?q=${encodeURIComponent(q)}&site=${site}`), body = await res.json();
+  const ev = body.events || [];
+  $('#player-out').innerHTML = '<div class="table-wrap" id="t-player"></div>';
+  table('#t-player', [{ label: 'Time (IST)', key: 'time' }, { label: 'Site', html: r => esc(siteName(r.site)) }, { label: 'Event', key: 'name' },
+    { label: 'Details', cls: 'details', key: 'details' }, { label: 'Device', key: 'device' }], ev);
+}
+
+// ---------------- Loading ----------------
+async function load() {
+  $('#updated').textContent = 'Loading…';
+  $('#error').hidden = true;
+  try {
+    const res = await fetch(`/api/gk-data?range=${range}&site=${site}`), body = await res.json();
+    if (!res.ok) throw new Error(body.error || res.statusText);
+    last = body;
+    $('#demo').hidden = !body.demo;
+    $('#updated').textContent = 'Updated ' + new Date(body.generatedAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+    render();
+  } catch (e) {
+    $('#error').hidden = false;
+    $('#error').textContent = 'Could not load the numbers: ' + e.message;
+    $('#updated').textContent = '';
+  }
+}
+function setRange(r) {
+  range = r; store.set('dash-range', r);
+  document.querySelectorAll('[data-range]').forEach(b => b.setAttribute('aria-pressed', b.dataset.range === r));
+  load();
+}
+function setTab(t) {
+  if (!document.querySelector(`[data-panel="${t}"]`)) t = 'overview';
+  tab = t; store.set('gk-tab', t);
+  document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
+  document.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== t);
+  requestAnimationFrame(() => Object.values(charts).forEach(c => c.resize()));
+}
+$('#site').innerHTML = Object.entries(SITE_NAMES).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
+$('#site').value = SITE_NAMES[site] ? site : 'all';
+$('#site').addEventListener('change', e => { site = e.target.value; store.set('gk-site', site); load(); });
+document.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => setRange(b.dataset.range)));
+document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+$('#refresh').addEventListener('click', load);
+$('#live-filter').addEventListener('input', renderLive);
+$('#player-q').addEventListener('input', () => { clearTimeout(_lookupTimer); _lookupTimer = setTimeout(lookup, 300); });
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-player]');
+  if (!p) return;
+  e.preventDefault(); $('#player-q').value = p.dataset.player; lookup(); $('#player-q').scrollIntoView({ block: 'center' });
+});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+setInterval(() => { if (!document.hidden) load(); }, 5 * 60 * 1000);   // auto-refresh every 5 minutes
+tab = store.get('gk-tab') || 'overview';
+setTab(tab);
+setRange(range);
+</script>
+</body>
+</html>

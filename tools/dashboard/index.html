@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Borderline analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --border: rgba(11,11,11,0.10);
+    --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781; --grid: #e1e0d9; --axis: #c3c2b7;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #9b5de5;
+    --good: #006300; --bad: #d03b3b;
+    --wash: rgba(42,120,214,0.08);
+    --heat: 42,120,214;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --border: rgba(255,255,255,0.10);
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #a879ec;
+      --good: #34c759; --bad: #e66767;
+      --wash: rgba(57,135,229,0.12);
+      --heat: 57,135,229;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: var(--page); border-bottom: 1px solid var(--border); }
+  .bar { max-width: 1280px; margin: 0 auto; padding: 12px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  h1 { font-size: 18px; margin: 0 12px 0 0; }
+  .badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #fab219; color: #0b0b0b; }
+  .spacer { flex: 1; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg button, .tabs button, .btn { font: inherit; border: 0; background: none; color: var(--ink-2); cursor: pointer; padding: 6px 12px; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--page); font-weight: 600; }
+  .btn { border: 1px solid var(--border); border-radius: 8px; }
+  .btn:hover, .seg button:hover:not([aria-pressed="true"]) { background: var(--wash); }
+  .updated { color: var(--muted); font-size: 12px; }
+  .tabs { max-width: 1280px; margin: 0 auto; padding: 0 12px; display: flex; gap: 2px; overflow-x: auto; }
+  .tabs button { padding: 10px 12px; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--s1); font-weight: 600; }
+  main { max-width: 1280px; margin: 0 auto; padding: 20px; }
+  section[hidden] { display: none; }
+  h3.group { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 8px 0 10px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 960px) { .grid, .grid.three { grid-template-columns: minmax(0, 1fr); } }
+  .sub-h { margin: 18px 4px 8px; font-size: .95rem; color: var(--ink-2); font-weight: 600; }
+  .tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 16px; }
+  .tile, .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .tile { padding: 14px 16px; }
+  .tile .label { color: var(--ink-2); font-size: 12px; }
+  .tile .value { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .tile .sub { color: var(--muted); font-size: 12px; }
+  .delta { font-size: 12px; font-weight: 700; margin-left: 6px; }
+  .delta.up { color: var(--good); } .delta.down { color: var(--bad); } .delta.flat { color: var(--muted); }
+  .card { padding: 16px; min-width: 0; }
+  .card h2 { font-size: 14px; margin: 0 0 2px; }
+  .card p.note { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
+  .chart { position: relative; height: 260px; }
+  .chart.tall { height: 360px; }
+  .wide { grid-column: 1 / -1; }
+  .table-wrap { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { color: var(--ink-2); font-weight: 600; font-size: 12px; position: sticky; top: 0; background: var(--surface); }
+  td.num, th.num { text-align: right; }
+  tr:hover td { background: var(--wash); }
+  td.cell-heat { text-align: right; }
+  .details { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--ink-2); max-width: 520px; overflow-wrap: anywhere; }
+  .empty { color: var(--muted); padding: 24px 0; text-align: center; }
+  .error { background: var(--surface); border: 1px solid var(--bad); color: var(--bad); padding: 16px; border-radius: 12px; margin-bottom: 16px; white-space: pre-wrap; }
+  input[type="search"] { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); width: 300px; margin-bottom: 12px; }
+  .pct { color: var(--muted); font-size: 12px; margin-left: 4px; }
+  /* weekday × hour heatmap */
+  .heat { display: grid; grid-template-columns: 34px repeat(24, minmax(0, 1fr)); gap: 2px; font-size: 11px; color: var(--muted); }
+  .heat span { height: 22px; border-radius: 3px; display: grid; place-items: center; }
+  .heat .hcell { background: rgba(var(--heat), var(--a)); }
+  /* funnel */
+  .funnel { display: flex; flex-direction: column; gap: 6px; }
+  .frow { display: grid; grid-template-columns: 210px 1fr 110px; gap: 10px; align-items: center; }
+  .ftrack { height: 26px; background: var(--grid); border-radius: 6px; overflow: hidden; }
+  .ftrack i { display: block; height: 100%; background: var(--s1); border-radius: 6px; }
+  .fnum { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .fnum small { color: var(--muted); font-weight: 400; }
+  .profile { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 12px; }
+  .profile b { font-size: 16px; }
+  td.feedback-msg { white-space: pre-wrap; min-width: 280px; max-width: 520px; }
+  /* export menu */
+  .export { position: relative; }
+  .export summary { list-style: none; cursor: pointer; font-weight: 600; color: var(--ink); }
+  .export summary::-webkit-details-marker { display: none; }
+  .export-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 5; width: 320px; padding: 8px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    display: flex; flex-direction: column; gap: 4px; }
+  .export-menu button { font: inherit; text-align: left; border: 0; background: none; color: var(--ink); cursor: pointer;
+    padding: 9px 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 2px; font-weight: 600; }
+  .export-menu button:hover { background: var(--wash); }
+  .export-menu button:disabled { opacity: 0.5; cursor: wait; }
+  .export-menu small { color: var(--muted); font-weight: 400; font-size: 12px; }
+  .export-menu label { display: flex; gap: 8px; align-items: center; padding: 8px 10px 2px; color: var(--ink-2); border-top: 1px solid var(--grid); margin-top: 4px; }
+  .export-menu .note { color: var(--muted); font-size: 12px; margin: 0; padding: 0 10px 4px; }
+  a.switch { color: var(--ink-2); text-decoration: none; padding: 6px 12px; font-weight: 600; }
+  a.switch.on { background: var(--ink); color: var(--page); }
+  a.switch:hover:not(.on) { background: var(--wash); }
+  body.printing .seg, .snapshot ~ .seg { display: none; }
+  .snapshot { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--wash); color: var(--s1); }
+  /* PDF: every tab, one after another, light theme */
+  .print-only { display: none; }
+  body.printing header { display: none; }
+  body.printing main { max-width: 1000px; padding: 0; }
+  body.printing .print-only { display: block; }
+  body.printing .table-wrap { max-height: none; overflow: visible; }
+  body.printing th { position: static; }
+  body.printing section[data-panel="live"] { display: none; }
+  body.printing .panel-title { font-size: 20px; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--s1); }
+  body.printing section + section { break-before: page; }
+  /* a chart, a tile row, a funnel never split; a card may (long tables run on), keeping its title with it */
+  body.printing .chart, body.printing .tile, body.printing .tiles, body.printing .funnel, body.printing .heat { break-inside: avoid; }
+  body.printing .card h2, body.printing .card p.note { break-after: avoid; }
+  body.printing .chart { height: 220px; }
+  body.printing .chart.tall { height: 300px; }
+  body.printing .grid { gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.printing .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.printing { background: #fff; }
+  body.printing tr { break-inside: avoid; }
+  .print-head { margin-bottom: 18px; }
+  .print-head h1 { font-size: 24px; margin: 0; }
+  .print-head p { margin: 4px 0 0; color: var(--ink-2); }
+  @page { size: A4 landscape; margin: 10mm; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tr:hover td { background: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>🌍 Borderline analytics</h1>
+    <nav class="seg" aria-label="Dashboard"><a class="switch on" href="/" aria-current="page">🌍 Borderline</a><a class="switch" href="/gk">🎲 GameKatta</a></nav>
+    <span id="demo" class="badge" hidden>DEMO DATA</span>
+    <span class="spacer"></span>
+    <div class="seg" role="group" aria-label="Time range">
+      <button data-range="24h">24 hours</button><button data-range="7d">7 days</button><button data-range="30d">30 days</button><button data-range="90d">90 days</button>
+    </div>
+    <button id="refresh" class="btn">Refresh</button>
+    <details class="export" id="export">
+      <summary class="btn">Export</summary>
+      <div class="export-menu">
+        <button type="button" id="exp-pdf">📄 PDF report<small>Every tab for the range shown, one per page. Pick “Save as PDF” in the print dialog.</small></button>
+        <button type="button" id="exp-html">🌐 Interactive HTML<small>One file with all 4 ranges: switch tabs and ranges, hover the charts. Opens in any browser, no server needed.</small></button>
+        <label id="exp-names-row"><input type="checkbox" id="exp-names" /> Include player and room names</label>
+        <p class="note">The Live &amp; players tab is never exported.</p>
+      </div>
+    </details>
+    <span id="snapshot" class="snapshot" hidden></span>
+    <span id="updated" class="updated"></span>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="overview">Overview</button>
+    <button role="tab" data-tab="acquisition">Acquisition</button>
+    <button role="tab" data-tab="activation">Activation</button>
+    <button role="tab" data-tab="features">Guide &amp; features</button>
+    <button role="tab" data-tab="retention">Retention</button>
+    <button role="tab" data-tab="push">Notifications</button>
+    <button role="tab" data-tab="engagement">Engagement</button>
+    <button role="tab" data-tab="games">Games</button>
+    <button role="tab" data-tab="daily">Daily</button>
+    <button role="tab" data-tab="social">Social</button>
+    <button role="tab" data-tab="sharing">Sharing</button>
+    <button role="tab" data-tab="collection">Collection</button>
+    <button role="tab" data-tab="trivia">Trivia</button>
+    <button role="tab" data-tab="story">Story</button>
+    <button role="tab" data-tab="tech">Tech</button>
+    <button role="tab" data-tab="live">Live &amp; players</button>
+  </nav>
+</header>
+
+<main>
+  <div id="print-head" class="print-head print-only"></div>
+  <div id="error" class="error" hidden></div>
+
+  <section data-panel="overview">
+    <div class="tiles" id="kpi-tiles"></div>
+    <h3 class="group">Right now</h3>
+    <div class="tiles" id="total-tiles"></div>
+    <div class="grid">
+      <div class="card wide"><h2>Active players per day</h2><p class="note">Unique players with any activity that day (IST) · new = first visit that day</p><div class="chart"><canvas id="c-active"></canvas></div></div>
+      <div class="card"><h2>Games finished per day</h2><p class="note">All modes</p><div class="chart"><canvas id="c-games"></canvas></div></div>
+      <div class="card"><h2>Daily participation</h2><p class="note">% of each day's active players who finished that day's Daily</p><div class="chart"><canvas id="c-participation"></canvas></div></div>
+      <div class="card wide"><h2>When people play</h2><p class="note">Sessions by weekday and hour (IST) in this range · darker = busier</p><div id="heatmap"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="acquisition" hidden>
+    <div class="tiles" id="acq-tiles"></div>
+    <div class="grid">
+      <div class="card"><h2>New players by channel</h2><p class="note">From each player's first visit: tagged share links, referring site, or campaign</p><div class="chart tall"><canvas id="c-channels"></canvas></div></div>
+      <div class="card"><h2>Channel quality</h2><p class="note">Do players from each channel play and come back?</p><div class="table-wrap" id="t-channels"></div></div>
+      <div class="card"><h2>Top inviters</h2><p class="note">Players whose shared links brought in the most new players</p><div class="table-wrap" id="t-inviters"></div></div>
+      <div class="card"><h2>Campaigns</h2><p class="note">Links with utm_source / utm_campaign (or ?s=) that aren't in-game shares</p><div class="table-wrap" id="t-campaigns"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="activation" hidden>
+    <div class="tiles" id="act-tiles"></div>
+    <div class="card"><h2>New-player funnel</h2><p class="note">Of the players whose first visit was in this range, how many reached each step (ever)</p><div class="funnel" id="funnel"></div></div>
+  </section>
+
+  <section data-panel="features" hidden>
+    <h3 class="sub-h">Captain Reed &amp; the first game</h3>
+    <div class="tiles" id="feat-guide-tiles"></div>
+    <div class="grid">
+      <div class="card"><h2>From the Captain to coming back</h2><p class="note">Players who met the Captain in this range · the in-game steps count within their first day</p><div class="chart"><canvas id="c-feat-funnel"></canvas></div></div>
+      <div class="card"><h2>Tutorial tips</h2><p class="note">Shown, and tapped through (the search tip also counts typing straight away)</p><div class="table-wrap" id="t-feat-tips"></div></div>
+    </div>
+    <h3 class="sub-h">🔭 Spyglass, 🗺️ Atlas and the Captain's facts</h3>
+    <div class="tiles" id="feat-tool-tiles"></div>
+    <div class="grid">
+      <div class="card"><h2>Does a spyglass help?</h2><p class="note">Finished Dailies with and without one</p><div class="table-wrap" id="t-feat-spy"></div></div>
+      <div class="card"><h2>Per day</h2><div class="chart"><canvas id="c-feat-days"></canvas></div></div>
+    </div>
+    <h3 class="sub-h">Results, sharing and trivia</h3>
+    <div class="tiles" id="feat-result-tiles"></div>
+  </section>
+
+  <section data-panel="retention" hidden>
+    <div class="tiles" id="ret-tiles"></div>
+    <div class="grid">
+      <div class="card wide"><h2>Players coming back</h2><p class="note">Of the players who first came on a day, % active again 1 and 7 days later</p><div class="chart"><canvas id="c-retention"></canvas></div></div>
+      <div class="card wide"><h2>Daily cohorts</h2><p class="note">% of each day's new players active on day 1, 3, 7, 14 and 30 · blank = too early to know</p><div class="table-wrap" id="t-cohorts"></div></div>
+      <div class="card wide"><h2>Weekly cohorts</h2><p class="note">% of each week's new players active during week 1, 2, 3, 4 and 8 after</p><div class="table-wrap" id="t-cohorts-weekly"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="push" hidden>
+    <p id="push-none" class="empty" hidden>No notification data yet. Notifications start once supabase/017_push.sql is run and the push function is set up (docs/PUSH.md).</p>
+    <div class="tiles" id="push-tiles"></div>
+    <div class="grid">
+      <div class="card wide"><h2>Sent and opened per day</h2><p class="note">Notifications handed to the push services, and taps that opened the game</p><div class="chart"><canvas id="c-push-days"></canvas></div></div>
+      <div class="card"><h2>By kind</h2><p class="note">Open rate = taps ÷ sent</p><div class="table-wrap" id="t-push-kinds"></div></div>
+      <div class="card"><h2>Do they come back more?</h2><p class="note">Players active in this range, by whether they have notifications on</p><div class="table-wrap" id="t-push-effect"></div></div>
+      <div class="card"><h2>Where we asked</h2><p class="note">Our sheet shown → turned on, refused at the browser's prompt, or “Not now”</p><div class="table-wrap" id="t-push-asks"></div></div>
+      <div class="card"><h2>Devices with notifications on</h2><div class="chart"><canvas id="c-push-platforms"></canvas></div></div>
+    </div>
+  </section>
+
+  <section data-panel="engagement" hidden>
+    <div class="tiles" id="eng-tiles"></div>
+    <div class="grid">
+      <div class="card"><h2>Session length</h2><p class="note">Time with the game on screen, per visit</p><div class="chart"><canvas id="c-sessions"></canvas></div></div>
+      <div class="card"><h2>Average session per day</h2><p class="note">Seconds on screen per visit</p><div class="chart"><canvas id="c-session-days"></canvas></div></div>
+      <div class="card"><h2>Games per player</h2><p class="note">Finished games per active player in this range</p><div class="chart"><canvas id="c-gpp"></canvas></div></div>
+      <div class="card"><h2>Live Daily streaks</h2><p class="note">Players whose streak is still alive (played today or yesterday)</p><div class="chart"><canvas id="c-streaks"></canvas></div></div>
+      <div class="card wide"><h2>Feature use</h2><p class="note">Everything else players did, by times and players</p><div class="table-wrap" id="t-features"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="games" hidden>
+    <div class="grid">
+      <div class="card"><h2>Started vs finished vs abandoned, by mode</h2><p class="note">Abandoned = left mid-game (tab hidden or back)</p><div class="chart"><canvas id="c-modes"></canvas></div></div>
+      <div class="card"><h2>Guesses needed to find the country</h2><p class="note">Finished games · X = not found</p><div class="chart"><canvas id="c-guesses"></canvas></div></div>
+      <div class="card wide"><h2>Modes</h2><div class="table-wrap" id="t-modes"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="daily" hidden>
+    <div class="grid">
+      <div class="card wide"><h2>Daily win rate</h2><p class="note">Players with a leaderboard name who submitted that day's Daily</p><div class="chart"><canvas id="c-daily"></canvas></div></div>
+      <div class="card wide"><h2>How hard was each Daily?</h2><div class="table-wrap" id="t-daily"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="social" hidden>
+    <div class="tiles" id="social-tiles"></div>
+    <div class="grid">
+      <div class="card"><h2>Invite funnel</h2><p class="note">Room and challenge links: shared → opened → new players → joined a room</p><div class="chart"><canvas id="c-invites"></canvas></div></div>
+      <div class="card"><h2>Challenges by region and pace</h2><div class="table-wrap" id="t-themes"></div></div>
+      <div class="card wide"><h2>Biggest rooms</h2><div class="table-wrap" id="t-rooms"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="sharing" hidden>
+    <div class="tiles" id="share-tiles"></div>
+    <div class="grid">
+      <div class="card"><h2>What gets shared</h2><p class="note">Shares by where in the game they came from</p><div class="chart"><canvas id="c-surfaces"></canvas></div></div>
+      <div class="card"><h2>How results are shared</h2><div class="chart"><canvas id="c-methods"></canvas></div></div>
+      <div class="card wide"><h2>Which shares bring players</h2><p class="note">Visits through tagged links, and the new players they brought · new per 100 shares is the payoff</p><div class="table-wrap" id="t-conversion"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="collection" hidden>
+    <div class="tiles" id="col-tiles"></div>
+    <div class="card"><h2>Badges unlocked</h2><p class="note">Players who saw each badge's unlock card in this range</p><div class="chart tall"><canvas id="c-badges"></canvas></div></div>
+  </section>
+
+  <section data-panel="trivia" hidden>
+    <div class="tiles" id="trivia-tiles"></div>
+    <div class="card"><h2>Hardest questions</h2><p class="note">Asked at least 3 times in this range · the most common wrong pick hints at a confusing option</p><div class="table-wrap" id="t-trivia"></div></div>
+  </section>
+
+  <section data-panel="story" hidden>
+    <div class="tiles" id="story-tiles"></div>
+    <div class="grid">
+      <div class="card wide"><h2>Where players drop off</h2><p class="note">Players who started vs finished each chapter of The Unmaking</p><div class="chart"><canvas id="c-story-funnel"></canvas></div></div>
+      <div class="card"><h2>The ending choice</h2><p class="note">First choice per player (replays excluded)</p><div class="chart"><canvas id="c-story-choice"></canvas></div></div>
+      <div class="card"><h2>Dialogue skipped, by where</h2><div class="chart"><canvas id="c-story-skips"></canvas></div></div>
+      <div class="card wide"><h2>Chapters</h2><div class="table-wrap" id="t-story"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="tech" hidden>
+    <div class="tiles" id="tech-tiles"></div>
+    <div class="grid three">
+      <div class="card"><h2>Devices</h2><div class="chart"><canvas id="c-devices"></canvas></div></div>
+      <div class="card"><h2>Operating systems</h2><div class="chart"><canvas id="c-os"></canvas></div></div>
+      <div class="card"><h2>Browsers</h2><div class="chart"><canvas id="c-browsers"></canvas></div></div>
+      <div class="card"><h2>Time zones</h2><p class="note">Where players are, roughly</p><div class="chart"><canvas id="c-tz"></canvas></div></div>
+      <div class="card"><h2>Languages</h2><div class="chart"><canvas id="c-langs"></canvas></div></div>
+      <div class="card"><h2>App versions</h2><div class="chart"><canvas id="c-versions"></canvas></div></div>
+      <div class="card"><h2>Referring sites</h2><div class="chart"><canvas id="c-refs"></canvas></div></div>
+      <div class="card"><h2>Load time</h2><p class="note">Milliseconds until the game was ready, by device</p><div class="table-wrap" id="t-load"></div></div>
+      <div class="card"><h2>Home banners</h2><div class="table-wrap" id="t-banners"></div></div>
+    </div>
+  </section>
+
+  <section data-panel="live" hidden>
+    <div class="card" style="margin-bottom:16px">
+      <h2>Look up a player</h2><p class="note">By leaderboard name, or the start of their player id</p>
+      <input type="search" id="player-q" placeholder="e.g. riddhi or 1a2b3c4d" />
+      <div id="player-out"></div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <h2>Feedback</h2><p class="note">From the game's footer · the last 30 days (or the range, if longer) · never included in exports</p>
+      <div class="table-wrap" id="t-feedback"></div>
+    </div>
+    <input type="search" id="live-filter" placeholder="Filter events, e.g. challenge or android" />
+    <div class="card"><div class="table-wrap" id="t-live"></div></div>
+  </section>
+</main>
+
+<!--SNAPSHOT-->
+<script>
+const $ = s => document.querySelector(s);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt = n => n == null || Number.isNaN(+n) ? '—' : Number(n).toLocaleString('en-IN');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+const pctOrNull = (a, b) => a == null || !b ? null : Math.round(100 * a / b);
+const mins = s => s == null ? '—' : s < 60 ? `${Math.round(s)}s` : `${Math.floor(s / 60)}m ${String(Math.round(s % 60)).padStart(2, '0')}s`;
+const shortDay = d => new Date(d + (String(d).length === 10 ? 'T00:00:00' : '')).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+
+const LABELS = {
+  app_open: 'Opened the game', game_start: 'Game started', game_end: 'Game finished', game_abandoned: 'Game abandoned',
+  session_time: 'Time on screen', trivia_answer: 'Trivia answered', tutorial_step: 'Tutorial step',
+  leaderboard_view: 'Leaderboard viewed', share: 'Result shared', help_open: 'How to play opened', stats_open: 'Stats opened',
+  signin_click: 'Sign-in tapped', username_set: 'Name chosen', friend_request: 'Friend request sent', invite_share: 'Friend invite shared',
+  install_click: 'Install tapped', install_prompt: 'Install prompt answered', invite_open: 'Friend invite opened', app_installed: 'App installed',
+  friend_request_received: 'Friend request received (live)', friend_request_accepted_push: 'Friend accepted (live)',
+  daily_username_prompt_shown: 'Daily name gate shown', daily_username_prompt_skipped: 'Daily name gate skipped',
+  first_game_username_prompt_shown: 'First-game name prompt shown', first_game_username_prompt_skipped: 'First-game name prompt skipped',
+  passport_open: 'Passport opened', badge_viewed: 'Badge viewed in cabinet', badge_card_shown: 'Badge unlocked (card)', badge_share: 'Badge shared',
+  rooms_open: 'Play with friends opened', room_create: 'Room created', room_join: 'Room joined', room_leave: 'Room left', room_invite_share: 'Room invite shared',
+  challenge_create: 'Challenge created', challenge_open: 'Challenge opened', challenge_round_start: 'Challenge country started',
+  challenge_round_submit: 'Challenge country finished', challenge_share: 'Challenge shared', duel_click: 'Quick duel shared',
+  night_start: 'Game night started', night_join: 'Game night joined', night_round_start: 'Night round started', night_round_submit: 'Night round finished', night_end: 'Game night ended',
+  hints_open: 'Hints opened', trivia_skip: 'Trivia skipped', tutorial_done: 'Tutorial finished', signout: 'Signed out',
+  banner_shown: 'Banner shown', banner_click: 'Banner tapped', banner_dismiss: 'Banner dismissed',
+  push_prompt_shown: 'Notifications: asked', push_prompt_accept: 'Notifications: tapped Turn on', push_prompt_dismiss: 'Notifications: Not now',
+  push_enabled: 'Notifications turned on', push_denied: 'Notifications refused', push_disabled: 'Notifications turned off',
+  push_error: 'Notifications: error', push_open: 'Opened from a notification', push_prefs: 'Notification settings changed',
+  push_test: 'Test notification sent', push_sheet_open: 'Notification settings opened',
+};
+const PUSH_KIND = { daily: 'Daily reminder', streak: 'Streak saver', comeback: 'Come-back nudge', friend: 'Friend request',
+  challenge: 'New challenge', night: 'Game night', test: 'Test' };
+const PUSH_SOURCE = { daily_result: 'After a Daily', banner: 'Home banner', room: 'After joining a room', account: 'Account → Notifications',
+  settings: 'Settings' };
+const PUSH_PLATFORM = { android: 'Android (browser)', 'android-pwa': 'Android (installed)', 'ios-pwa': 'iPhone (Home Screen)',
+  desktop: 'Desktop', 'desktop-pwa': 'Desktop (installed)', 'mac-safari': 'Mac Safari' };
+const SURFACES = { result: 'Result', badge: 'Badge', founding: 'Founding badge', challenge: 'Challenge', room: 'Room invite', friend: 'Friend invite',
+  story: 'Story', duel: 'Quick duel', tv: 'TV link' };
+const surfaceName = s => SURFACES[s] || s;
+
+// An exported HTML file carries its data in window.SNAPSHOT: { generatedAt, names, ranges: { '7d': body, … } }
+const SNAP = window.SNAPSHOT || null;
+const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+                set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+let range = store.get('dash-range') || '7d';
+let tab   = store.get('dash-tab') || 'overview';
+if (SNAP && !SNAP.ranges[range]) range = Object.keys(SNAP.ranges)[0];
+let last  = null;
+const charts = {};
+
+// ---------------- Charts ----------------
+function baseOptions({ horizontal = false, legend = false, pctAxis = false, stacked = false, secs = false } = {}) {
+  const grid = css('--grid'), muted = css('--muted');
+  const valueAxis = {
+    beginAtZero: true, stacked, border: { display: false }, grid: { color: grid },
+    ticks: { color: muted, precision: 0, callback: v => pctAxis ? v + '%' : secs ? mins(v) : fmt(v) },
+    ...(pctAxis ? { max: 100 } : {}),
+  };
+  const catAxis = { stacked, grid: { display: false }, border: { color: css('--axis') }, ticks: { color: muted, autoSkipPadding: 12, maxRotation: 0 } };
+  return {
+    responsive: true, maintainAspectRatio: false, indexAxis: horizontal ? 'y' : 'x',
+    ...(document.body.classList.contains('printing') ? { devicePixelRatio: 2 } : {}),
+    animation: false,   // charts on hidden tabs would otherwise animate in from the left when shown
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: legend, position: 'top', align: 'start', labels: { color: css('--ink-2'), boxWidth: 12, boxHeight: 12, usePointStyle: true, pointStyle: 'rectRounded' } },
+      tooltip: { backgroundColor: css('--surface'), titleColor: css('--ink'), bodyColor: css('--ink-2'), borderColor: css('--border'), borderWidth: 1, padding: 10,
+                 callbacks: { label: ctx => { const v = horizontal ? ctx.parsed.x : ctx.parsed.y; return ` ${ctx.dataset.label}: ${secs ? mins(v) : fmt(v)}${pctAxis ? '%' : ''}`; } } },
+    },
+    scales: horizontal ? { x: valueAxis, y: catAxis } : { x: catAxis, y: valueAxis },
+  };
+}
+function barDataset(label, data, color) {
+  return { label, data, backgroundColor: color, hoverBackgroundColor: color, borderRadius: 4, borderSkipped: 'start', borderWidth: 0,
+           maxBarThickness: 36, categoryPercentage: 0.8, barPercentage: 0.9 };
+}
+function lineDataset(label, data, color) {
+  return { label, data, borderColor: color, backgroundColor: color, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5,
+           pointHoverBorderWidth: 2, pointHoverBorderColor: css('--surface'), tension: 0, fill: false, spanGaps: true };
+}
+function draw(id, type, labels, datasets, opts) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }   // a destroyed chart left here would break the next resize
+  const el = document.getElementById(id);
+  const hasData = datasets.some(d => d.data.some(v => v));
+  el.parentElement.querySelector('.empty')?.remove();
+  el.hidden = !hasData;
+  if (!hasData) { el.insertAdjacentHTML('afterend', '<div class="empty">No data in this range yet</div>'); return; }
+  charts[id] = new Chart(el, { type, data: { labels, datasets }, options: opts });
+}
+const hbar = (id, rows, valueKey = 'players', label = 'Players') =>
+  draw(id, 'bar', rows.map(r => r.label || '(unknown)'), [barDataset(label, rows.map(r => +r[valueKey]), css('--s1'))], baseOptions({ horizontal: true }));
+
+// ---------------- Tables, tiles, deltas ----------------
+function table(el, cols, rows) {
+  if (!rows.length) { $(el).innerHTML = '<div class="empty">No data in this range yet</div>'; return; }
+  $(el).innerHTML = `<table><thead><tr>${cols.map(c => `<th class="${c.num ? 'num' : ''}">${c.label}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${cols.map(c => `<td class="${c.num ? 'num' : ''}${c.cls ? ' ' + c.cls : ''}"${c.style ? ` style="${c.style(r)}"` : ''}>${c.html ? c.html(r) : esc(c.num ? fmt(r[c.key]) : r[c.key])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function tiles(el, items) {
+  $(el).innerHTML = items.map(t => `<div class="tile"><div class="label">${t.label}</div><div class="value">${t.value}${t.delta || ''}</div>${t.sub ? `<div class="sub">${t.sub}</div>` : ''}</div>`).join('');
+}
+// ▲ / ▼ against the previous period of the same length
+function delta(cur, prev, { lowerIsBetter = false } = {}) {
+  cur = +cur || 0; prev = +prev || 0;
+  if (!prev && !cur) return '';
+  if (!prev) return '<span class="delta up">new</span>';
+  const d = Math.round(100 * (cur - prev) / prev);
+  const good = lowerIsBetter ? d < 0 : d > 0;
+  return `<span class="delta ${d === 0 ? 'flat' : good ? 'up' : 'down'}" title="vs previous period">${d > 0 ? '▲' : d < 0 ? '▼' : '='} ${Math.abs(d)}%</span>`;
+}
+// A table cell shaded by how high its % is
+const heatCell = (n, total) => n == null ? '' : `${pct(n, total)}%`;
+const heatStyle = (n, total) => n == null ? '' : `background: rgba(var(--heat), ${(pct(n, total) / 100 * 0.85).toFixed(2)})`;
+
+// ---------------- Render ----------------
+function render() {
+  if (!last) return;
+  const d = last.data, s1 = css('--s1'), s2 = css('--s2'), s3 = css('--s3'), s4 = css('--s4');
+  const rangeName = { '24h': 'last 24 hours', '7d': 'last 7 days', '30d': 'last 30 days', '90d': 'last 90 days' }[last.range];
+  const cur = d.kpis.find(r => r.period === 'cur') || {}, prev = d.kpis.find(r => r.period === 'prev') || {};
+  const T = d.totals[0] || {};
+  const avgSess = r => r.timed_sessions ? r.seconds / r.timed_sessions : null;
+
+  // ---- Overview
+  tiles('#kpi-tiles', [
+    { label: 'Players', value: fmt(cur.players), delta: delta(cur.players, prev.players), sub: `unique, ${rangeName}` },
+    { label: 'New players', value: fmt(cur.new_players), delta: delta(cur.new_players, prev.new_players), sub: 'first visit in range' },
+    { label: 'Avg daily players', value: fmt(cur.avg_dau), delta: delta(cur.avg_dau, prev.avg_dau) },
+    { label: 'Visits', value: fmt(cur.sessions), delta: delta(cur.sessions, prev.sessions), sub: `${(cur.sessions / (cur.players || 1)).toFixed(1)} per player` },
+    { label: 'Avg visit', value: mins(avgSess(cur)), delta: delta(avgSess(cur), avgSess(prev)), sub: 'time on screen' },
+    { label: 'Games finished', value: fmt(cur.games), delta: delta(cur.games, prev.games), sub: `${(cur.games / (cur.gamers || 1)).toFixed(1)} per player who played` },
+    { label: 'Shares', value: fmt(cur.shares), delta: delta(cur.shares, prev.shares) },
+    { label: 'New from shared links', value: pct(cur.viral_new, cur.new_players) + '%', delta: delta(pctOrNull(cur.viral_new, cur.new_players), pctOrNull(prev.viral_new, prev.new_players)), sub: `${fmt(cur.viral_new)} players` },
+  ]);
+  tiles('#total-tiles', [
+    { label: 'Today', value: fmt(T.dau_today), sub: 'players so far (IST)' },
+    { label: 'Last 7 days', value: fmt(T.wau), sub: 'weekly players' },
+    { label: 'Last 30 days', value: fmt(T.mau), sub: 'monthly players' },
+    { label: 'Stickiness', value: pct(cur.avg_dau, T.mau) + '%', sub: 'avg daily ÷ monthly' },
+    { label: 'All-time players', value: fmt(T.total_players), sub: `${fmt(T.google_accounts)} Google · ${fmt(T.with_username)} named` },
+    { label: 'Rooms open', value: fmt(T.rooms_open) },
+  ]);
+  const days = d.days.map(r => shortDay(r.day));
+  draw('c-active', 'bar', days, [barDataset('Returning', d.days.map(r => Math.max(0, r.active - r.new_players)), s1), barDataset('New', d.days.map(r => +r.new_players), s2)],
+       baseOptions({ legend: true, stacked: true }));
+  draw('c-games', 'bar', days, [barDataset('Games', d.days.map(r => +r.games), s1)], baseOptions());
+  draw('c-participation', 'line', days, [lineDataset('Played the Daily', d.days.map(r => pctOrNull(r.daily_players, r.active)), s3)], baseOptions({ pctAxis: true }));
+  renderHeatmap(d.heatmap);
+
+  // ---- Acquisition
+  const channels = d.channels;
+  const inviterTotal = d.inviters.length;
+  tiles('#acq-tiles', [
+    { label: 'New players', value: fmt(cur.new_players), delta: delta(cur.new_players, prev.new_players) },
+    { label: 'From shared links', value: fmt(cur.viral_new), sub: `${pct(cur.viral_new, cur.new_players)}% of new players` },
+    { label: 'Viral factor', value: (cur.viral_new / (cur.players || 1)).toFixed(2), sub: 'new players via links ÷ active players' },
+    { label: 'Players who brought someone', value: fmt(inviterTotal) + (inviterTotal === 15 ? '+' : '') },
+    { label: 'Back next day', value: pct(channels.reduce((a, r) => a + r.d1, 0), channels.reduce((a, r) => a + r.d1_eligible, 0)) + '%', sub: 'all new players' },
+  ]);
+  hbar('c-channels', channels.map(r => ({ label: r.channel, players: r.players })));
+  table('#t-channels', [
+    { label: 'Channel', key: 'channel' }, { label: 'New', key: 'players', num: true },
+    { label: 'Played', num: true, html: r => pct(r.played, r.players) + '%' },
+    { label: 'Back next day', num: true, html: r => r.d1_eligible ? pct(r.d1, r.d1_eligible) + '%' : '—', style: r => r.d1_eligible ? heatStyle(r.d1, r.d1_eligible) : '' },
+  ], channels);
+  table('#t-inviters', [
+    { label: 'Player', html: r => r.username ? esc(r.username) : `<span class="pct">guest ${esc(r.ref)}</span>` },
+    { label: 'Brought in', key: 'invited', num: true }, { label: 'Who played', key: 'played', num: true },
+  ], d.inviters);
+  table('#t-campaigns', [{ label: 'Campaign / source', key: 'campaign' }, { label: 'Medium', key: 'medium' }, { label: 'New players', key: 'players', num: true }], d.campaigns);
+
+  // ---- Activation
+  const a = d.activation[0] || {};
+  tiles('#act-tiles', [
+    { label: 'New players', value: fmt(a.opened) },
+    { label: 'Finished a first game', value: pct(a.finished, a.opened) + '%' },
+    { label: 'Time to first game', value: a.median_min_to_game == null ? '—' : `${a.median_min_to_game} min`, sub: 'median' },
+    { label: 'Back next day', value: pct(a.back_d1, a.d1_eligible) + '%', sub: `${fmt(a.back_d1)} of ${fmt(a.d1_eligible)}` },
+  ]);
+  const steps = [['Opened the game', a.opened], ['Started a game', a.started], ['Finished a game', a.finished], ['Won a game', a.won],
+    ['Played 2+ games', a.second_game], ['Finished the tutorial', a.tutorial], ['Picked a name', a.named], ['Shared something', a.shared],
+    ['Joined or made a room', a.roomed], ['Signed in with Google', a.google]];
+  $('#funnel').innerHTML = steps.map(([label, n]) => `<div class="frow"><span>${label}</span><div class="ftrack"><i style="width:${pct(n, a.opened)}%"></i></div>
+    <span class="fnum">${fmt(n)} <small>${pct(n, a.opened)}%</small></span></div>`).join('') +
+    `<div class="frow"><span>Back the next day</span><div class="ftrack"><i style="width:${pct(a.back_d1, a.d1_eligible)}%;background:${s3}"></i></div>
+    <span class="fnum">${fmt(a.back_d1)} <small>${pct(a.back_d1, a.d1_eligible)}% of ${fmt(a.d1_eligible)}</small></span></div>`;
+
+  // ---- Retention
+  const ch = d.churn[0] || {};
+  tiles('#ret-tiles', [
+    { label: 'Kept from last week', value: pct(ch.kept, ch.last_week) + '%', sub: `${fmt(ch.kept)} of ${fmt(ch.last_week)} players came back this week` },
+    { label: 'Came back after 2+ weeks away', value: fmt(ch.resurrected), sub: 'this week' },
+    { label: 'Avg day 1', value: avgPct(d.cohorts, 'd1') },
+    { label: 'Avg day 7', value: avgPct(d.cohorts, 'd7') },
+    { label: 'Avg day 30', value: avgPct(d.cohorts, 'd30') },
+  ]);
+  const ret = [...d.cohorts].reverse();
+  draw('c-retention', 'line', ret.map(r => shortDay(r.day)),
+       [lineDataset('Back on day 1', ret.map(r => pctOrNull(r.d1, r.new_players)), s1), lineDataset('Back on day 7', ret.map(r => pctOrNull(r.d7, r.new_players)), s2)],
+       baseOptions({ legend: true, pctAxis: true }));
+  table('#t-cohorts', [
+    { label: 'First visit', html: r => esc(shortDay(r.day)) }, { label: 'New', key: 'new_players', num: true },
+    ...['d1', 'd3', 'd7', 'd14', 'd30'].map(k => ({ label: `Day ${k.slice(1)}`, cls: 'cell-heat', html: r => heatCell(r[k], r.new_players), style: r => heatStyle(r[k], r.new_players) })),
+  ], d.cohorts);
+  table('#t-cohorts-weekly', [
+    { label: 'Week of', html: r => esc(shortDay(r.week)) }, { label: 'New', key: 'new_players', num: true },
+    ...['w1', 'w2', 'w3', 'w4', 'w8'].map(k => ({ label: `Week ${k.slice(1)}`, cls: 'cell-heat', html: r => heatCell(r[k], r.new_players), style: r => heatStyle(r[k], r.new_players) })),
+  ], d.cohortsWeekly);
+
+  // ---- Engagement
+  const participation = d.days.filter(r => r.active);
+  tiles('#eng-tiles', [
+    { label: 'Avg visit', value: mins(avgSess(cur)) },
+    { label: 'Visits per player', value: (cur.sessions / (cur.players || 1)).toFixed(1) },
+    { label: 'Games per player', value: (cur.games / (cur.gamers || 1)).toFixed(1), sub: 'players who played' },
+    { label: 'Play the Daily', value: pct(participation.reduce((x, r) => x + r.daily_players, 0), participation.reduce((x, r) => x + r.active, 0)) + '%', sub: 'of daily active players' },
+  ]);
+  const order = (rows, keys, key = 'bucket', val = 'sessions') => keys.map(k => +(rows.find(r => r[key] === k)?.[val] || 0));
+  const sessKeys = ['< 1 min', '1–3 min', '3–10 min', '10–30 min', '30+ min'];
+  draw('c-sessions', 'bar', sessKeys, [barDataset('Visits', order(d.sessionLengths, sessKeys), s1)], baseOptions());
+  draw('c-session-days', 'line', days, [lineDataset('Avg visit', d.days.map(r => r.avg_session_sec == null ? null : +r.avg_session_sec), s1)], baseOptions({ secs: true }));
+  const gppKeys = ['1', '2–3', '4–9', '10–19', '20+'];
+  draw('c-gpp', 'bar', gppKeys, [barDataset('Players', order(d.gamesPerPlayer, gppKeys, 'bucket', 'players'), s1)], baseOptions());
+  const stKeys = ['1 day', '2–3 days', '4–6 days', '1–2 weeks', '2–4 weeks', '30+ days'];
+  draw('c-streaks', 'bar', stKeys, [barDataset('Players', order(d.streaks, stKeys, 'bucket', 'players'), s2)], baseOptions());
+  table('#t-features', [
+    { label: 'What', html: r => esc(LABELS[r.label] || r.label) },
+    { label: 'Times', key: 'times', num: true }, { label: 'Players', key: 'players', num: true },
+    { label: '% of players', num: true, html: r => pct(r.players, cur.players) + '%' },
+  ], d.features);
+
+  // ---- Games
+  const modeName = m => ({ daily: 'Daily', classic: 'Classic', endless: 'Endless (old)', story: 'Story' }[m] || m);
+  draw('c-modes', 'bar', d.modes.map(r => modeName(r.mode)),
+       [barDataset('Started', d.modes.map(r => +r.started), s1), barDataset('Finished', d.modes.map(r => +r.finished), s2), barDataset('Abandoned', d.modes.map(r => +r.abandoned || 0), s3)],
+       baseOptions({ legend: true }));
+  const gOrder = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10+', 'X'];
+  draw('c-guesses', 'bar', gOrder, [barDataset('Games', gOrder.map(b => +(d.guesses.find(r => r.bucket === b)?.games || 0)), s1)], baseOptions());
+  table('#t-modes', [
+    { label: 'Mode', html: r => esc(modeName(r.mode)) }, { label: 'Players', key: 'players', num: true },
+    { label: 'Started', key: 'started', num: true }, { label: 'Finished', key: 'finished', num: true },
+    { label: 'Finish rate', num: true, html: r => pct(r.finished, r.started) + '%' }, { label: 'Abandoned', key: 'abandoned', num: true },
+    { label: 'Avg guesses at quit', num: true, html: r => r.avg_guesses_at_quit ?? '—' },
+    { label: 'Win rate', num: true, html: r => r.win_pct == null ? '—' : r.win_pct + '%' }, { label: 'Avg guesses (wins)', num: true, html: r => r.avg_guesses ?? '—' },
+  ], d.modes);
+
+  // ---- Daily
+  const dailyAsc = [...d.daily].reverse();
+  draw('c-daily', 'bar', dailyAsc.map(r => `${shortDay(r.day)} · ${r.country}`), [barDataset('Win rate', dailyAsc.map(r => +r.win_pct), s1)], baseOptions({ pctAxis: true }));
+  table('#t-daily', [
+    { label: 'Day', html: r => esc(shortDay(r.day)) }, { label: 'Country', key: 'country' }, { label: 'Players', key: 'players', num: true },
+    { label: 'Win rate', num: true, html: r => r.win_pct + '%' }, { label: 'Avg guesses (wins)', num: true, html: r => r.avg_guesses ?? '—' },
+    { label: 'Best score', key: 'best_score', num: true },
+  ], d.daily);
+
+  // ---- Social
+  const so = d.social[0] || {}, inv = d.inviteFunnel[0] || {};
+  tiles('#social-tiles', [
+    { label: 'Rooms open', value: fmt(so.rooms_open), sub: `${fmt(so.rooms_created)} created in range` },
+    { label: 'Players in rooms', value: fmt(so.players_in_rooms), sub: `${so.avg_members ?? '—'} members per room` },
+    { label: 'Hub opened', value: fmt(so.hub_opens), sub: `${fmt(so.hub_players)} players` },
+    { label: 'Challenges', value: fmt(so.challenges), sub: `${fmt(so.challenge_entries)} entries` },
+    { label: 'Challenges finished', value: pct(so.challenge_finishes, so.challenge_entries) + '%', sub: 'played all 5 countries' },
+    { label: 'Game nights', value: fmt(so.nights), sub: `${so.avg_night_players ?? '—'} players each` },
+    { label: 'Friendships', value: fmt(so.friendships), sub: `${fmt(so.friend_requests)} requests in range` },
+  ]);
+  draw('c-invites', 'bar', ['Links shared', 'Link visits', 'New players', 'Joined a room'],
+       [barDataset('Count', [inv.invites_shared, inv.link_visits, inv.new_from_links, inv.joins_via_link].map(v => +v || 0), s1)], baseOptions());
+  const themeName = t => ({ world: '🌍 World', europe: '🏰 Europe', asia: '🏯 Asia', africa: '🦁 Africa', americas: '🗽 Americas', oceania: '🏝️ Oceania' }[t] || t);
+  table('#t-themes', [
+    { label: 'Region', html: r => esc(themeName(r.theme)) }, { label: 'Pace', html: r => r.speed ? '⚡ Speed' : 'Relaxed' },
+    { label: 'Challenges', key: 'challenges', num: true }, { label: 'Entries', key: 'entries', num: true },
+    { label: 'Countries found', num: true, html: r => r.found_pct == null ? '—' : r.found_pct + '%' },
+    { label: 'Avg points', key: 'avg_points', num: true },
+  ], d.challengeThemes);
+  table('#t-rooms', [
+    { label: 'Room', html: r => `${esc(r.emoji)} ${esc(r.name)}` }, { label: 'Created', html: r => esc(shortDay(r.created)) },
+    { label: 'Members', key: 'members', num: true }, { label: 'Daily players this week', key: 'weekly_daily_players', num: true },
+    { label: 'Challenges', key: 'challenges', num: true }, { label: 'Game nights', key: 'nights', num: true },
+  ], d.roomsTop);
+
+  // ---- Sharing
+  const surf = d.shareSurfaces, conv = d.linkConversion;
+  const sharesBy = Object.fromEntries(surf.map(r => [r.surface, r]));
+  tiles('#share-tiles', [
+    { label: 'Shares', value: fmt(cur.shares), delta: delta(cur.shares, prev.shares) },
+    { label: 'Players who shared', value: fmt(cur.sharers), delta: delta(cur.sharers, prev.sharers), sub: `${pct(cur.sharers, cur.players)}% of players` },
+    { label: 'Visits from links', value: fmt(conv.reduce((x, r) => x + r.visits, 0)) },
+    { label: 'New players from links', value: fmt(conv.reduce((x, r) => x + r.new_players, 0)) },
+  ]);
+  draw('c-surfaces', 'bar', surf.map(r => surfaceName(r.surface)), [barDataset('Shares', surf.map(r => +r.times), s1)], baseOptions({ horizontal: true }));
+  const shareName = m => ({ native: 'Share sheet', whatsapp: 'WhatsApp', copy: 'Copied', image: 'Image', x: 'X' }[m] || m);
+  draw('c-methods', 'bar', d.shareMethods.map(r => shareName(r.label)), [barDataset('Shares', d.shareMethods.map(r => +r.times), s1)], baseOptions({ horizontal: true }));
+  table('#t-conversion', [
+    { label: 'Link from', html: r => esc(surfaceName(r.surface)) },
+    { label: 'Shares', num: true, html: r => fmt(sharesBy[r.surface]?.times ?? (r.surface === 'founding' ? sharesBy.badge?.times : null)) },
+    { label: 'Visits', key: 'visits', num: true }, { label: 'New players', key: 'new_players', num: true },
+    { label: 'New per 100 shares', num: true, html: r => { const s = sharesBy[r.surface]?.times; return s ? Math.round(100 * r.new_players / s) : '—'; } },
+  ], conv);
+
+  // ---- Collection
+  const c = d.collection[0] || {};
+  tiles('#col-tiles', [
+    { label: 'Passport opened', value: fmt(c.passport_opens), sub: `${fmt(c.passport_players)} players` },
+    { label: 'Players who unlocked a badge', value: fmt(c.unlockers) },
+    { label: 'Badges viewed in the cabinet', value: fmt(c.trophy_views) },
+    { label: 'Badges shared', value: fmt(c.badge_shares) },
+    { label: 'Founding players', value: fmt(c.founding_players), sub: 'played before 15 Oct 2026' },
+  ]);
+  const badgeName = b => ({ 'founding-player': '🏅 Founding Player', 'first-find': '📍 First Find', bullseye: '🎯 Bullseye', 'bold-opener': '🦄 Bold Opener',
+    'quiz-whiz': '🧠 Quiz Whiz', 'last-gasp': '⏳ Last Gasp', 'night-owl': '🦉 Night Owl', 'on-a-roll': '🔥 On a Roll', 'week-warrior': '⚡ Week Warrior',
+    'month-maniac': '🌙 Month Maniac', regular: '📅 Regular', stamped: '🛂 Stamped', cartographer: '✈️ Cartographer', globetrotter: '🌏 Globetrotter',
+    'continent-clear': '🗺️ Continent Clear' }[b] || b);
+  hbar('c-badges', d.badges.map(r => ({ label: badgeName(r.badge), players: r.players })));
+
+  // ---- Guide & features
+  const F = d.feat[0] || {};
+  tiles('#feat-guide-tiles', [
+    { label: 'Met the Captain', value: fmt(F.intro_started), sub: 'new players who saw the intro' },
+    { label: 'Saved a name', value: pct(F.intro_named, F.intro_started) + '%', sub: `${fmt(F.intro_named)} players` },
+    { label: 'Skipped his lines', value: pct(F.intro_skipped, F.intro_started) + '%' },
+    { label: 'Time to a name', value: mins(F.name_seconds), sub: 'median, from his first line' },
+    { label: 'Kept the rolled name', value: pct(F.kept_rolled, F.names) + '%', sub: 'didn’t type their own' },
+    { label: 'Tips tapped through', value: pct(F.tips_acted, F.tips_shown) + '%', sub: `${fmt(F.tips_shown)} shown` },
+  ]);
+  hbar('c-feat-funnel', d.feat_funnel);
+  table('#t-feat-tips', [
+    { label: 'Tip', key: 'tip' }, { label: 'Shown', key: 'shown', num: true },
+    { label: 'Tapped', num: true, html: r => `${fmt(r.tapped)} · ${pct(r.tapped, r.shown)}%` },
+    { label: 'Typed instead', num: true, html: r => r.typed > 0 ? `${fmt(r.typed)} · ${pct(r.typed, r.shown)}%` : '—' },
+  ], d.feat_tips);
+  tiles('#feat-tool-tiles', [
+    { label: 'Spyglasses earned', value: fmt(F.spy_earned), sub: '5 Dailies in a row' },
+    { label: 'Spyglasses used', value: fmt(F.spy_used), sub: `${fmt(F.spy_users)} players · ${pct(F.spy_used, F.spy_opened)}% of opens` },
+    { label: 'Names hidden again', value: fmt(F.spy_hid), sub: 'after using one' },
+    { label: 'Atlas opens', value: fmt(F.atlas_opens), sub: `${fmt(F.atlas_users)} players · ${mins(F.atlas_seconds)} avg` },
+    { label: 'Tapped the Captain', value: fmt(F.captain_tappers), sub: `${fmt(F.captain_taps)} facts and questions` },
+    { label: 'Quiz answers revealed', value: pct(F.quiz_revealed, F.quiz_asked) + '%', sub: `${fmt(F.quiz_asked)} questions asked` },
+  ]);
+  table('#t-feat-spy', [
+    { label: '', key: 'label' }, { label: 'Dailies', key: 'games', num: true },
+    { label: 'Won', num: true, html: r => r.win_pct == null ? '—' : r.win_pct + '%' },
+    { label: 'Avg guesses (wins)', num: true, html: r => r.avg_guesses == null ? '—' : r.avg_guesses },
+  ], d.feat_spy_games);
+  draw('c-feat-days', 'bar', d.feat_days.map(r => shortDay(r.day)), [
+    barDataset('Spyglass used', d.feat_days.map(r => +r.spy_used), s1), barDataset('Spyglass earned', d.feat_days.map(r => +r.spy_earned), s2),
+    barDataset('Atlas opens', d.feat_days.map(r => +r.atlas_opens), s3), barDataset('Captain taps', d.feat_days.map(r => +r.captain_taps), s4),
+  ], baseOptions({ legend: true }));
+  tiles('#feat-result-tiles', [
+    { label: 'Radar images shared', value: fmt(F.radar_shares), sub: `${pct(F.radar_shares, F.shares)}% of all result shares` },
+    { label: 'View globe after a game', value: fmt(F.globe_views) },
+    { label: 'View globe from home', value: fmt(F.globe_replays), sub: 'a finished game replayed' },
+    { label: 'Classic board views', value: fmt(F.classic_lb_views), sub: `${fmt(F.classic_lb_users)} players` },
+    { label: 'Trivia answered right', value: pct(F.trivia_right, F.trivia_answers) + '%', sub: `${pct(F.trivia_skips, F.trivia_shown)}% skipped` },
+    { label: 'Trivia repeats', value: pct(F.trivia_repeat, F.trivia_shown) + '%', sub: `capital questions ${pct(F.trivia_capital, F.trivia_shown)}%` },
+  ]);
+
+  // ---- Trivia
+  const t = d.triviaSummary[0] || {};
+  tiles('#trivia-tiles', [
+    { label: 'Questions answered', value: fmt(t.answered) }, { label: 'Answered correctly', value: t.correct_pct == null ? '—' : t.correct_pct + '%' },
+    { label: 'Ran out of time', value: fmt(t.timeouts) }, { label: 'Skipped', value: fmt(t.skips) }, { label: 'Hints opened', value: fmt(t.hint_opens) },
+  ]);
+  table('#t-trivia', [
+    { label: 'Question', key: 'question' }, { label: 'Country', key: 'country' }, { label: 'Asked', key: 'asked', num: true },
+    { label: 'Correct', num: true, html: r => r.correct_pct + '%' }, { label: 'Most common wrong pick', key: 'common_wrong' },
+  ], d.triviaHardest);
+
+  // ---- Story
+  const st = d.storySummary[0] || {};
+  const ch1 = d.storyFunnel.find(r => +r.chapter === 1), ch7 = d.storyFunnel.find(r => +r.chapter === 7);
+  tiles('#story-tiles', [
+    { label: 'Opened story mode', value: fmt(st.openers), sub: 'players' },
+    { label: 'Finished chapter 1', value: fmt(ch1?.players_done), sub: ch1 ? `${pct(ch1.players_done, ch1.players_started)}% of starters` : '' },
+    { label: 'Reached the ending', value: fmt(ch7?.players_done) },
+    { label: 'Dialogue skipped', value: pct(st.dialogue_skips, st.chapter_starts) + '%', sub: 'skips per chapter start' },
+    { label: 'Unlocked via Daily', value: fmt(st.daily_unlocks) },
+    { label: 'Sound turned on', value: pct(st.sound_on, st.sound_answers) + '%', sub: `${fmt(st.sound_answers)} answered` },
+    { label: 'Kept going after a chapter', value: pct((+st.next_chapter || 0) + (+st.next_daily || 0), st.next_shown) + '%' },
+  ]);
+  draw('c-story-funnel', 'bar', d.storyFunnel.map(r => `Ch ${r.chapter}`),
+       [barDataset('Started', d.storyFunnel.map(r => +r.players_started), s1), barDataset('Finished', d.storyFunnel.map(r => +r.players_done), s2)], baseOptions({ legend: true }));
+  const choiceName = x => ({ break: 'Break the Needle', keep: 'Keep her' }[x] || x);
+  draw('c-story-choice', 'bar', d.storyChoices.map(r => choiceName(r.label)), [barDataset('Players', d.storyChoices.map(r => +r.first_choices), s1)], baseOptions({ horizontal: true }));
+  draw('c-story-skips', 'bar', d.storySkips.map(r => r.label), [barDataset('Skips', d.storySkips.map(r => +r.times), s1)], baseOptions({ horizontal: true }));
+  table('#t-story', [
+    { label: 'Chapter', html: r => `Ch ${r.chapter}` }, { label: 'Started', key: 'players_started', num: true }, { label: 'Finished', key: 'players_done', num: true },
+    { label: 'Finish rate', num: true, html: r => pct(r.players_done, r.players_started) + '%' },
+    { label: 'Avg world saved', num: true, html: r => r.avg_saved == null ? '—' : r.avg_saved + '%' },
+    { label: 'Avg guesses', num: true, html: r => r.avg_guesses ?? '—' },
+    { label: 'Avg time to find', num: true, html: r => r.avg_seconds == null ? '—' : Math.round(r.avg_seconds) + 's' },
+  ], d.storyFunnel);
+
+  // ---- Tech
+  const ins = d.installed[0] || {};
+  const load = d.loadTimes;
+  tiles('#tech-tiles', [
+    { label: 'Using the installed app', value: pct(ins.installed, ins.players) + '%', sub: `${fmt(ins.installed)} of ${fmt(ins.players)} players` },
+    { label: 'Typical load', value: load.length ? `${fmt(Math.round(load.reduce((x, r) => x + r.p50 * r.opens, 0) / load.reduce((x, r) => x + r.opens, 0)))} ms` : '—', sub: 'median, all devices' },
+  ]);
+  hbar('c-devices', d.devices); hbar('c-os', d.os); hbar('c-browsers', d.browsers); hbar('c-tz', d.timezones);
+  hbar('c-langs', d.languages); hbar('c-versions', d.versions); hbar('c-refs', d.referrers);
+  table('#t-load', [{ label: 'Device', key: 'device' }, { label: 'Opens', key: 'opens', num: true }, { label: 'Median', key: 'p50', num: true }, { label: 'Slowest 10%', key: 'p90', num: true }], load);
+  table('#t-banners', [{ label: 'Banner', key: 'banner' }, { label: 'Shown', key: 'shown', num: true },
+    { label: 'Tapped', num: true, html: r => `${fmt(r.clicks)}<span class="pct">${pct(r.clicks, r.shown)}%</span>` },
+    { label: 'Dismissed', num: true, html: r => `${fmt(r.dismisses)}<span class="pct">${pct(r.dismisses, r.shown)}%</span>` }], d.banners);
+
+  // ---- Notifications
+  const P = (d.pushTotals || [])[0];
+  $('#push-none').hidden = !!P;
+  if (P) tiles('#push-tiles', [
+    { label: 'Players with notifications on', value: fmt(P.players_on), sub: `${fmt(P.devices)} devices` },
+    { label: 'Of active players', value: P.active ? pct(P.active_on, P.active) + '%' : '—', sub: `${fmt(P.active_on)} of ${fmt(P.active)} ${rangeName}` },
+    { label: 'Sent', value: fmt(P.sent), sub: P.failed ? `${fmt(P.failed)} failed` : 'none failed' },
+    { label: 'Opened', value: fmt(P.opened), sub: P.sent ? `${pct(P.opened, P.sent)}% of sent` : '' },
+    { label: 'Said yes when asked', value: P.asked ? pct(P.enabled, P.asked) + '%' : '—', sub: `${fmt(P.enabled)} of ${fmt(P.asked)} asked` },
+    { label: 'Turned off', value: fmt(P.turned_off), sub: `${fmt(P.denied)} refused at the prompt` },
+  ]);
+  else $('#push-tiles').innerHTML = '';
+  draw('c-push-days', 'bar', d.pushDays.map(r => shortDay(r.day)),
+    [barDataset('Sent', d.pushDays.map(r => +r.sent), s1), barDataset('Opened', d.pushDays.map(r => +r.opened), s3)], baseOptions({ legend: true }));
+  table('#t-push-kinds', [
+    { label: 'Kind', html: r => esc(PUSH_KIND[r.kind] || r.kind) }, { label: 'Sent', key: 'sent', num: true }, { label: 'Opened', key: 'opened', num: true },
+    { label: 'Open rate', num: true, html: r => r.sent ? pct(r.opened, r.sent) + '%' : '—', style: r => r.sent ? heatStyle(r.opened, r.sent) : '' },
+  ], d.pushKinds);
+  table('#t-push-effect', [
+    { label: 'Players', key: 'label' }, { label: 'Count', key: 'players', num: true }, { label: 'Avg days active', key: 'avg_days', num: true },
+    { label: 'Came back (2+ days)', num: true, html: r => r.returned_pct == null ? '—' : r.returned_pct + '%' },
+  ], d.pushEffect);
+  table('#t-push-asks', [
+    { label: 'Asked from', html: r => esc(PUSH_SOURCE[r.source] || r.source) }, { label: 'Shown', key: 'shown', num: true },
+    { label: 'Turned on', key: 'enabled', num: true }, { label: 'Refused', key: 'denied', num: true }, { label: 'Not now', key: 'not_now', num: true },
+  ], d.pushAsks);
+  hbar('c-push-platforms', d.pushPlatforms.map(r => ({ ...r, label: PUSH_PLATFORM[r.label] || r.label })));
+
+  const FEEDBACK_KIND = { bug: '🐞 Bug', idea: '💡 Idea', other: '💬 Other' };
+  table('#t-feedback', [
+    { label: 'Time (IST)', key: 'time' }, { label: 'Kind', html: r => esc(FEEDBACK_KIND[r.kind] || r.kind) },
+    { label: 'Message', key: 'message', cls: 'feedback-msg' }, { label: 'Player', key: 'player' },
+    { label: 'Reply to', html: r => r.contact ? `<a href="mailto:${esc(r.contact)}">${esc(r.contact)}</a>` : '' },
+    { label: 'Device', html: r => esc([PUSH_PLATFORM[r.platform] || r.platform, r.viewport].filter(Boolean).join(' · ')) },
+  ], d.feedback || []);
+
+  renderLive();
+}
+
+function avgPct(rows, key) {
+  const ok = rows.filter(r => r[key] != null && r.new_players);
+  const n = ok.reduce((a, r) => a + r.new_players, 0);
+  return n ? pct(ok.reduce((a, r) => a + r[key], 0), n) + '%' : '—';
+}
+
+function renderHeatmap(rows) {
+  const by = {}; let max = 0;
+  for (const r of rows) { by[`${r.dow}|${r.hour}`] = +r.sessions; max = Math.max(max, +r.sessions); }
+  const daysW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  let html = '<div class="heat"><span></span>' + Array.from({ length: 24 }, (_, h) => `<span>${h % 3 === 0 ? h : ''}</span>`).join('');
+  daysW.forEach((name, i) => {
+    html += `<span>${name}</span>`;
+    for (let h = 0; h < 24; h++) {
+      const v = by[`${i + 1}|${h}`] || 0;
+      html += `<span class="hcell" style="--a:${max ? (0.06 + 0.94 * v / max).toFixed(2) : 0.06}" title="${name} ${h}:00 · ${v} visits"></span>`;
+    }
+  });
+  $('#heatmap').innerHTML = rows.length ? html + '</div>' : '<div class="empty">No data in this range yet</div>';
+}
+
+function renderLive() {
+  if (!last) return;
+  const q = $('#live-filter').value.trim().toLowerCase();
+  const rows = last.data.recent.filter(r => !q || Object.values(r).join(' ').toLowerCase().includes(q));
+  table('#t-live', [
+    { label: 'Time (IST)', key: 'time' }, { label: 'Player', key: 'player' }, { label: 'Event', html: r => esc(LABELS[r.name] || r.name) },
+    { label: 'Device', html: r => esc(`${r.device || ''} · ${r.os || ''}`) }, { label: 'Details', key: 'details', cls: 'details' },
+  ], rows);
+}
+
+// ---------------- Player lookup ----------------
+let _lookupTimer = null;
+async function lookup() {
+  const q = $('#player-q').value.trim();
+  const out = $('#player-out');
+  if (q.length < 2) { out.innerHTML = ''; return; }
+  out.innerHTML = '<div class="empty">Searching…</div>';
+  try {
+    const r = await (await fetch(`/api/player?q=${encodeURIComponent(q)}`)).json();
+    if (r.error) throw new Error(r.error);
+    if (!r.matches.length) { out.innerHTML = '<div class="empty">Nobody matches that</div>'; return; }
+    if (r.matches.length > 1) {
+      out.innerHTML = '<div class="table-wrap" id="t-matches"></div>';
+      table('#t-matches', [{ label: 'Name', html: m => esc(m.username || '(no name)') }, { label: 'Id', html: m => `<span class="details">${esc(m.id.slice(0, 8))}</span>` },
+        { label: 'Games', key: 'games', num: true }, { label: 'Rooms', key: 'rooms', num: true }, { label: 'Last seen', html: m => m.last_seen ? esc(new Date(m.last_seen).toLocaleString('en-IN')) : '—' }], r.matches);
+      out.insertAdjacentHTML('beforeend', '<p class="note">Type more of the name to pick one.</p>');
+      return;
+    }
+    const m = r.matches[0];
+    let landing = {};
+    try { landing = JSON.parse(r.first?.landing || '{}'); } catch {}
+    out.innerHTML = `<div class="profile"><b>${esc(m.username || '(no name)')}</b><span class="details">${esc(m.id)}</span>
+      <span>${m.google ? 'Google account' : 'Guest'}</span><span>Joined ${esc(r.first?.first_seen || new Date(m.created_at).toLocaleDateString('en-IN'))}</span>
+      <span>Came from: ${esc(landing.src ? surfaceName(landing.src) : landing.referrer || 'direct')}${landing.ref ? ` (invited by ${esc(landing.ref)})` : ''}</span>
+      <span>${fmt(m.games)} games · ${fmt(m.dailies)} Dailies · ${fmt(m.rooms)} rooms</span></div><div class="table-wrap" id="t-player"></div>`;
+    table('#t-player', [{ label: 'Time (IST)', key: 'time' }, { label: 'Event', html: e => esc(LABELS[e.name] || e.name) },
+      { label: 'Device', html: e => esc(`${e.device || ''} · ${e.os || ''}`) }, { label: 'Details', key: 'details', cls: 'details' }], r.events);
+  } catch (e) { out.innerHTML = `<div class="error">${esc(e.message)}</div>`; }
+}
+
+// ---------------- Data & controls ----------------
+async function load() {
+  if (SNAP) {
+    last = SNAP.ranges[range];
+    $('#demo').hidden = !last.demo;
+    render();
+    return;
+  }
+  $('#refresh').disabled = true;
+  $('#updated').textContent = 'Loading…';
+  try {
+    const res  = await fetch(`/api/data?range=${range}`);
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || res.statusText);
+    last = body;
+    $('#error').hidden = true;
+    $('#demo').hidden = !body.demo;
+    $('#updated').textContent = 'Updated ' + new Date(body.generatedAt).toLocaleTimeString('en-IN');
+    render();
+  } catch (e) {
+    $('#error').hidden = false;
+    $('#error').textContent = 'Could not load data: ' + e.message;
+    $('#updated').textContent = '';
+  }
+  $('#refresh').disabled = false;
+}
+function setRange(r) {
+  range = r; store.set('dash-range', r);
+  document.querySelectorAll('[data-range]').forEach(b => b.setAttribute('aria-pressed', b.dataset.range === r));
+  load();
+}
+function setTab(t) {
+  if (!document.querySelector(`[data-panel="${t}"]`) || (SNAP && t === 'live')) t = 'overview';
+  tab = t; store.set('dash-tab', t);
+  document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
+  document.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== t);
+  requestAnimationFrame(() => Object.values(charts).forEach(c => c.resize()));
+}
+document.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => setRange(b.dataset.range)));
+document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+$('#refresh').addEventListener('click', load);
+$('#live-filter').addEventListener('input', renderLive);
+$('#player-q').addEventListener('input', () => { clearTimeout(_lookupTimer); _lookupTimer = setTimeout(lookup, 300); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+if (!SNAP) setInterval(() => { if (!document.hidden) load(); }, 5 * 60 * 1000);   // auto-refresh every 5 minutes
+
+// ---------------- Export: PDF (print every tab) and a self-contained HTML file ----------------
+const RANGE_NAME = { '24h': 'Last 24 hours', '7d': 'Last 7 days', '30d': 'Last 30 days', '90d': 'Last 90 days' };
+const stamp = iso => new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+// What leaves this computer: never the live event log; names only when asked
+function forExport(data, names) {
+  const out = { ...data, recent: [], feedback: [] };
+  if (!names) {
+    out.inviters = (data.inviters || []).map((r, i) => ({ ...r, ref: '', username: `Player ${i + 1}` }));
+    out.roomsTop = (data.roomsTop || []).map((r, i) => ({ ...r, name: `Room ${i + 1}`, emoji: '🏠' }));
+  }
+  return out;
+}
+
+function exportPdf() {
+  if (!last) return;
+  $('#export').open = false;
+  const real = last, title = document.title;
+  const names = SNAP ? SNAP.names : $('#exp-names').checked;
+  last = SNAP ? last : { ...last, data: forExport(last.data, names) };
+  document.documentElement.dataset.theme = 'light';
+  document.body.classList.add('printing');
+  $('#print-head').innerHTML = `<h1>🌍 Borderline analytics</h1>
+    <p>${RANGE_NAME[last.range]} · compared with the ${RANGE_NAME[last.range].toLowerCase().replace('last ', 'previous ')}
+    · data from ${esc(stamp(last.generatedAt))} · days and hours in IST${last.demo ? ' · <b>DEMO DATA</b>' : ''}</p>`;
+  document.querySelectorAll('[data-panel]').forEach(p => {
+    p.hidden = p.dataset.panel === 'live';
+    if (!p.querySelector('.panel-title')) {
+      const name = document.querySelector(`[data-tab="${p.dataset.panel}"]`).textContent;
+      p.insertAdjacentHTML('afterbegin', `<h2 class="panel-title print-only">${esc(name)}</h2>`);
+    }
+  });
+  render();
+  document.title = `Borderline analytics · ${RANGE_NAME[last.range]} · ${new Date().toISOString().slice(0, 10)}`;   // the PDF's file name
+  const restore = () => {
+    window.removeEventListener('afterprint', restore);
+    last = real; document.title = title;
+    delete document.documentElement.dataset.theme;
+    document.body.classList.remove('printing');
+    setTab(tab); render();
+  };
+  window.addEventListener('afterprint', restore);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    Object.values(charts).forEach(c => c.resize());
+    window.print();
+  }));
+}
+
+const END = '<' + '/script>';   // never written literally: it would end this script tag
+async function exportHtml() {
+  const btn = $('#exp-html'), label = btn.innerHTML;
+  btn.disabled = true;
+  const names = $('#exp-names').checked;
+  try {
+    const ranges = {};
+    for (const r of Object.keys(RANGE_NAME)) {
+      btn.firstChild.textContent = `🌐 Collecting ${RANGE_NAME[r].toLowerCase()}…`;
+      const res = await fetch(`/api/data?range=${r}`), body = await res.json();
+      if (!res.ok) throw new Error(body.error || res.statusText);
+      ranges[r] = { ...body, data: forExport(body.data, names) };
+    }
+    let html = await (await fetch('/')).text();
+    // Chart.js inside the file, so it also works offline
+    const src = document.querySelector('script[src*="chart.js"]').src;
+    try {
+      const lib = await (await fetch(src)).text();
+      html = html.replace(`<script src="${src}">${END}`, () => `<script>${lib.replace(/<\/script/gi, '<\\/script')}${END}`);
+    } catch { /* keep the CDN link */ }
+    const snap = { generatedAt: new Date().toISOString(), names, ranges };
+    html = html.replace('<' + '!--SNAPSHOT-->', () => `<script>window.SNAPSHOT = ${JSON.stringify(snap).replace(/</g, '\\u003c')};${END}`);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    a.download = `borderline-analytics-${new Date().toISOString().slice(0, 10)}.html`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    $('#export').open = false;
+  } catch (e) {
+    $('#error').hidden = false;
+    $('#error').textContent = 'Export failed: ' + e.message;
+  }
+  btn.innerHTML = label;
+  btn.disabled = false;
+}
+
+$('#exp-pdf').addEventListener('click', exportPdf);
+$('#exp-html').addEventListener('click', exportHtml);
+document.addEventListener('click', e => { if (!e.target.closest('#export')) $('#export').open = false; });
+
+// An exported file: no server, no live tab, no refresh; say what it is
+if (SNAP) {
+  $('#refresh').hidden = true;
+  $('#exp-html').hidden = true;
+  $('#exp-names-row').hidden = true;
+  document.querySelector('[data-tab="live"]').hidden = true;
+  $('#snapshot').hidden = false;
+  $('#snapshot').textContent = 'Snapshot · ' + stamp(SNAP.generatedAt);
+  $('#updated').textContent = SNAP.names ? '' : 'Player and room names hidden';
+  document.title = 'Borderline analytics · snapshot ' + SNAP.generatedAt.slice(0, 10);
+}
+setTab(tab);
+setRange(range);
+</script>
+</body>
+</html>

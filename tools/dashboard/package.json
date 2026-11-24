@@ -1,0 +1,14 @@
+{
+  "name": "pancake-dashboard",
+  "private": true,
+  "type": "module",
+  "description": "Local analytics dashboard for Pancake (reads Supabase directly)",
+  "scripts": {
+    "start": "node server.mjs",
+    "demo": "node server.mjs --demo"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "pg": "^8.13.0"
+  }
+}
