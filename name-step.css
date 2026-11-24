@@ -1,0 +1,58 @@
+/* name-step.css — the name card before the first game (name-step.js) and the
+   first-game tip strip under the globe (coach.js). App theme only. */
+
+/* ---------------------------------------------------------------- name card */
+.name-step {
+  position: fixed; inset: 0; z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  background: var(--bg);
+  opacity: 0; transition: opacity .25s ease;
+  font-family: var(--font);
+}
+.name-step.in { opacity: 1; }
+.name-step-card {
+  display: flex; flex-direction: column; gap: 6px;
+  width: 100%; max-width: 420px; padding: 22px 18px 18px;
+  border-radius: 22px;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+.name-step-card h2 { font-size: 1.4rem; font-weight: 800; line-height: 1.2; }
+.name-step-text { margin-bottom: 10px; font-size: 1rem; line-height: 1.4; color: var(--muted); }
+.name-step-label { font-size: .75rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.name-step-row { display: flex; gap: 8px; }
+.name-step-row input {
+  flex: 1; min-width: 0; height: 48px; padding: 0 14px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg); color: var(--text);
+  font: inherit; font-size: 1.05rem; font-weight: 700;
+}
+.name-step-row input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+.name-step-dice {
+  width: 48px; height: 48px; flex-shrink: 0;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-2); font-size: 1.35rem; cursor: pointer;
+  transition: transform .15s;
+}
+.name-step-dice:active { transform: rotate(-30deg) scale(.92); }
+.name-step-hint { font-size: .8rem; color: var(--muted); }
+.name-step-error { font-size: .85rem; font-weight: 700; color: var(--hot); }
+.name-step-card .name-step-save { min-height: 48px; margin-top: 6px; font-size: 1rem; font-weight: 800; }
+
+/* ---------------------------------------------------------------- tip strip under the globe (coach.js) */
+/* Docked at the top of the guess area, pinned while the list scrolls: the globe stays clear */
+.coach.coach-strip {
+  position: sticky; top: 0; left: auto; transform: none; z-index: 3;
+  width: auto; max-width: none; margin: 6px 0 2px; padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: .88rem; text-align: left;
+}
+.coach.coach-strip.pop { animation: coach-dock-in .25s ease; }
+.coach.coach-strip b { font-weight: 800; }
+@keyframes coach-dock-in { from { opacity: 0; transform: translateY(-6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .name-step { transition: none; }
+  .coach.coach-strip.pop { animation: none; }
+}

@@ -1,0 +1,4 @@
+# Only GameKatta's own sites may open the sign-in bridge in a frame
+/auth-bridge.html
+  Content-Security-Policy: frame-ancestors https://*.gamekatta.com https://gamekatta.com
+  Cache-Control: no-cache

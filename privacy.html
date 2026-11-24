@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Privacy Policy — Borderline</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" />
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
+  <style>
+    :root { --bg: #0c0c0d; --surface-2: #1f1f22; --text: #f2f2f2; --muted: #9a9aa0; --border: #2a2a2e; --ink: #f2f2f2; --on-ink: #0c0c0d; color-scheme: dark; }
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) { --bg: #f6f6f4; --surface-2: #efefec; --text: #111112; --muted: #5f5f64; --border: #e2e2de; --ink: #111112; --on-ink: #fff; color-scheme: light; }
+    }
+    :root[data-theme="light"] { --bg: #f6f6f4; --surface-2: #efefec; --text: #111112; --muted: #5f5f64; --border: #e2e2de; --ink: #111112; --on-ink: #fff; color-scheme: light; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+    .bar {
+      position: sticky; top: 0; z-index: 1;
+      display: flex; align-items: center; gap: 4px;
+      padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px 8px;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+    }
+    .bar-title { font-weight: 800; font-size: 1.05rem; }
+    .icon-btn {
+      width: 44px; height: 44px; display: grid; place-items: center; flex-shrink: 0;
+      border: 0; border-radius: 50%; background: none; color: var(--text); cursor: pointer;
+    }
+    .icon-btn:hover { background: var(--surface-2); }
+    .icon-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    main { max-width: 680px; margin: 0 auto; padding: 8px 16px calc(40px + env(safe-area-inset-bottom, 0px)); }
+    .back-btn {
+      display: block; width: 100%; max-width: 320px; margin: 32px auto 0; padding: 14px 18px;
+      border: 0; border-radius: 999px; background: var(--ink); color: var(--on-ink);
+      font: inherit; font-weight: 700; text-align: center; text-decoration: none; cursor: pointer;
+    }
+    h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin: 16px 0 4px; }
+    h2 { font-size: 1.1rem; font-weight: 800; margin: 28px 0 6px; }
+    p, li { color: var(--text); }
+    .muted { color: var(--muted); }
+    a { color: inherit; }
+    ul { padding-left: 1.2em; }
+  </style>
+</head>
+<body>
+<header class="bar">
+  <a class="icon-btn" href="./" data-back aria-label="Back to the game">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+  </a>
+  <span class="bar-title">Borderline</span>
+</header>
+<main>
+  <h1>Privacy Policy</h1>
+  <p class="muted">Last updated 6 October 2026</p>
+
+  <p>Borderline is a free geography game. This page explains what information the game stores, why, and what you can do about it. The short version: we keep only what’s needed to save your games, we don’t show ads, and we never sell your data.</p>
+
+  <h2>What we collect</h2>
+  <ul>
+    <li><b>A random player ID.</b> When you open the game we create an anonymous account so your games can be saved. It isn’t linked to your name or device.</li>
+    <li><b>Your game results</b>: the mode, date, mystery country, number of guesses, the colour of each guess, your score and trivia answers count.</li>
+    <li><b>Story mode progress</b>: which chapters you’ve finished, your best score and stars for each, the postcards you’ve collected, and the ending you chose (with an anonymous count of how many players chose each ending). The final chapter guesses your home country from your device’s time zone and language to set its puzzle — that guess stays on your device and is never sent to us.</li>
+    <li><b>If you sign in with Google</b>: your email address, name and profile picture as provided by Google. We ask Google only for basic profile information — never your contacts, files or anything else.</li>
+  </ul>
+  <p>We don’t collect your precise location, contacts, or any payment information, and we don’t use advertising or tracking cookies.</p>
+
+  <h2>How we measure and improve the game</h2>
+  <ul>
+    <li><b>In-game events</b>: things like starting a game, answering a trivia question, sharing a result or opening the leaderboard, linked to your random player ID. Each event includes coarse device details — device type, operating system, browser, screen size, language and time zone — so we can see what works and fix what doesn’t. We also record how long the game is open on screen and how quickly it loads.</li>
+    <li><b>Share links</b>: links you share from the game include a short tag saying where they were shared from (for example a result or a room invite) and a short code taken from your random player ID, so we can count how many people your shares bring in. The code doesn’t contain your name or email. When you arrive through a link, we note where it came from.</li>
+    <li><b>Visit statistics</b> from Cloudflare Web Analytics: page views, country, device type and the site that referred you. It uses no cookies and does not track you across websites.</li>
+    <li><b>Error reports</b> from Sentry: when something breaks, a technical report with your browser and device details is sent so we can fix it.</li>
+  </ul>
+  <p>We don’t record your screen, keystrokes or precise location, and we don’t store IP addresses.</p>
+
+  <h2>Feedback</h2>
+  <p>If you send feedback from the game, we store your message, the email you give (only if you want a reply), your leaderboard name and basic device details (device type, browser, screen size, language and time zone) to understand and fix what you report. We use your email only to reply to you.</p>
+
+  <h2>Notifications</h2>
+  <p>Notifications are off until you turn them on. If you do, your browser gives us a push address for this device (a long random link to Google’s, Apple’s, Mozilla’s or Microsoft’s push service, depending on your browser) and its encryption keys, which we store with your time zone, the reminder time you picked and which kinds of notification you want. Every notification is encrypted so only your device can read it. We keep a short log of what was sent and whether it was delivered (for 90 days), and note when you open the game from one. Turn them off any time in Account → Notifications or in your device’s settings; we then forget that device.</p>
+
+  <h2>Stored on your device</h2>
+  <p>The game uses your browser’s local storage to keep your games, stats, streak, theme preference and sign-in session, so it works offline and loads quickly. Clearing your browser data removes it.</p>
+
+  <h2>Why we use it</h2>
+  <ul>
+    <li>To save your stats and Daily streak and sync them across your devices.</li>
+    <li>To show leaderboards (only your chosen username and scores are shown to other players).</li>
+    <li>To keep the game fair and working properly.</li>
+  </ul>
+
+  <h2>Who processes it</h2>
+  <ul>
+    <li><b>Supabase</b> stores accounts and game results.</li>
+    <li><b>Cloudflare</b> hosts the website.</li>
+    <li><b>Cloudflare</b> provides cookie-free visit statistics.</li>
+    <li><b>Sentry</b> receives error reports.</li>
+    <li><b>Google</b> handles sign-in if you choose “Continue with Google”.</li>
+    <li><b>Your browser’s push service</b> (Google, Apple, Mozilla or Microsoft) delivers notifications if you turn them on. It sees only encrypted messages.</li>
+  </ul>
+  <p>These providers process data on our behalf and may store it outside your country. We don’t share your data with anyone else, and we never sell it.</p>
+
+  <h2>How long we keep it</h2>
+  <p>We keep your account and game history for as long as you use the game. Anonymous guest accounts with no activity may be deleted after a period of inactivity.</p>
+
+  <h2>Your choices and rights</h2>
+  <p>You can play without signing in. You can sign out at any time. Clearing your browser data removes everything stored on your device. If you signed in with Google you can remove the game’s access at any time from your Google Account settings.</p>
+
+  <h2>Children</h2>
+  <p>Borderline is suitable for all ages, but accounts are not intended for children under 13.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, we’ll update the date at the top of this page.</p>
+
+  <a class="back-btn" href="./" data-back>Back to the game</a>
+</main>
+<script>
+  // Match the theme picked in the game
+  try {
+    const t = localStorage.getItem('pancake_theme');
+    if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  } catch {}
+  // Came from the game? Go back to exactly where the player was
+  document.querySelectorAll('[data-back]').forEach(a => a.addEventListener('click', e => {
+    let fromGame = false;
+    try { fromGame = new URL(document.referrer).origin === location.origin; } catch {}
+    if (fromGame && history.length > 1) { e.preventDefault(); history.back(); }
+  }));
+</script>
+</body>
+</html>

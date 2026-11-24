@@ -1,0 +1,9 @@
+.git/
+node_modules/
+docs/
+supabase/
+tools/
+.gitignore
+.DS_Store
+wrangler.jsonc
+.assetsignore

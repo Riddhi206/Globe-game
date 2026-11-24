@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#0c0c0d" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="description" content="Find the mystery country on the globe. Every guess shows how close you are — blue means far, dark red means very close." />
+  <title>Borderline — Guess the Country on the Globe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="story.css" />
+  <link rel="stylesheet" href="signal.css" />
+  <link rel="stylesheet" href="name-step.css" />
+  <meta property="og:title" content="Borderline — Guess the Country on the Globe" />
+  <meta property="og:description" content="Find the mystery country on the globe. A new Daily every day." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Borderline" />
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button id="back-btn" class="icon-btn" aria-label="Back to home" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <span class="brand"><img class="logo-dark" src="icons/logo-dark.svg" alt="Borderline" /><img class="logo-light" src="icons/logo-light.svg" alt="Borderline" /></span>
+      </div>
+      <div class="topbar-actions">
+        <button id="atlas-btn" class="icon-btn" aria-label="Atlas: every country named" title="Atlas: every country named">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5l6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg>
+        </button>
+        <button id="help-btn" class="icon-btn" aria-label="How to play" title="How to play">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4"/><circle cx="12" cy="16.8" r=".6" class="fill"/></svg>
+        </button>
+        <button id="stats-btn" class="icon-btn" aria-label="Statistics" title="Statistics">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>
+        </button>
+        <button id="theme-btn" class="icon-btn" aria-label="Toggle light / dark" title="Light / dark">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" class="fill"/></svg>
+        </button>
+        <button id="account-btn" class="icon-btn" aria-label="Account" title="Account">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1.2-3.4 3.8-5 7-5s5.8 1.6 7 5"/></svg>
+          <span id="account-dot" class="account-dot" hidden></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Home -->
+    <main id="home-screen" class="screen">
+      <section class="hero">
+        <h1 class="hero-logo"><img class="logo-dark" src="icons/logo-dark.svg" alt="Borderline" /><img class="logo-light" src="icons/logo-light.svg" alt="Borderline" /></h1>
+        <p id="hero-tagline">Find the mystery country on the globe. Every guess tells you how close you are.</p>
+      </section>
+
+      <div class="mode-list">
+        <button class="mode-card daily" id="daily-card" data-mode="daily">
+          <span class="mode-text">
+            <span class="mode-title" id="daily-title">Daily</span>
+            <span class="mode-desc" id="daily-desc"></span>
+          </span>
+          <span class="mode-streak mode-spy" id="daily-spy" hidden></span>
+          <span class="mode-streak" id="daily-streak" hidden></span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <!-- Yesterday's champion (renderChamp in game.js), hidden when nobody played -->
+        <button type="button" class="mode-card champ-card" id="champ-card" hidden>
+          <svg class="champ-ic" viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="22" cy="28" r="16" class="cg-globe"/>
+            <path d="M6 28h32M22 12c-6 5-6 27 0 32M22 12c6 5 6 27 0 32M9 20h26M9 36h26" class="cg-lines"/>
+            <path d="M31 4v17" class="cg-pole"/><path d="M31 4h12l-3 4 3 4H31z" class="cg-flag"/>
+            <circle cx="31" cy="21" r="2.4" class="cg-pin"/>
+          </svg>
+          <span class="mode-text">
+            <span class="champ-k" id="champ-k"></span>
+            <span class="champ-name" id="champ-name"></span>
+            <span class="mode-desc" id="champ-line"></span>
+          </span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button class="mode-card story" id="story-card" data-mode="story">
+          <span class="mode-text">
+            <span class="mode-title">Story mode</span>
+            <span class="mode-desc" id="story-desc"></span>
+          </span>
+          <span class="mode-badge-new" id="story-badge" hidden>NEW</span>
+          <span id="story-needle-mini" class="story-needle-mini" hidden aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#c9a04a"/><circle cx="12" cy="12" r="8.5" fill="#f4ecd8"/><ellipse cx="12" cy="12" rx="5" ry="3.8" fill="#fff" stroke="#3a2f1a" stroke-width="0.8"/><circle cx="12" cy="12.2" r="2" fill="#1b1611"/></svg>
+          </span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button class="mode-card signal" id="signal-card" data-mode="signal" hidden>
+          <span class="signal-card-icon" aria-hidden="true"><b></b><i></i><i></i></span>
+          <span class="mode-text">
+            <span class="mode-title">THE SIGNAL</span>
+            <span class="mode-desc">A stranger is texting you for help</span>
+          </span>
+          <span class="mode-badge-new" hidden>NEW</span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button class="mode-card rooms" id="rooms-card" data-mode="rooms">
+          <span class="rooms-card-icon" aria-hidden="true">🏆</span>
+          <span class="mode-text">
+            <span class="mode-title" id="rooms-title">Play with friends</span>
+            <span class="mode-desc" id="rooms-desc">Make a room, send the code, race your crew</span>
+          </span>
+          <span class="mode-badge-live" id="rooms-live" hidden>LIVE</span>
+          <span class="mode-badge-move" id="rooms-move" hidden>⚡</span>
+          <span id="friends-badge" class="badge" hidden></span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button class="mode-card" data-mode="classic">
+          <span class="mode-text">
+            <span class="mode-title">Classic</span>
+            <span class="mode-desc" id="classic-desc"></span>
+          </span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <!-- One rotating tip at a time (install / rooms); see renderBanner in game.js -->
+      <aside id="home-banner" class="home-banner" hidden>
+        <span id="hb-icon" class="hb-icon" aria-hidden="true"></span>
+        <div class="hb-text"><b id="hb-title"></b><span id="hb-body"></span></div>
+        <button type="button" id="hb-cta" class="btn primary small hb-cta"></button>
+        <button type="button" id="hb-close" class="hb-close" aria-label="Dismiss">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </aside>
+
+      <div class="home-links">
+        <button id="home-passport-btn" class="link-btn">Passport</button>
+        <button id="home-lb-btn" class="link-btn">Leaderboard</button>
+        <button id="home-help-btn" class="link-btn">How to play</button>
+        <button id="home-install-btn" class="link-btn" hidden>Install app</button>
+      </div>
+      <button id="home-save-btn" class="link-btn" hidden>Save your progress across devices</button>
+
+      <!-- The way back to the GameKatta hub: players who came from there had none -->
+      <a id="gk-home" class="gk-home" href="https://gamekatta.com/?utm_source=borderline&amp;utm_medium=back"><svg class="pip" viewBox="0 0 64 64" aria-hidden="true"><rect x="5" y="5" width="54" height="54" rx="15" fill="#ffc531" stroke="#1d1430" stroke-width="5" transform="rotate(-8 32 32)"/><g transform="rotate(-8 32 32)" fill="#1d1430"><circle cx="23" cy="25" r="4.5"/><circle cx="41" cy="25" r="4.5"/><path d="M20 37 Q32 49 44 37" fill="none" stroke="#1d1430" stroke-width="5" stroke-linecap="round"/></g></svg><span>More games on GameKatta</span><span aria-hidden="true">→</span></a>
+
+      <footer class="home-footer"><button type="button" id="feedback-btn" class="footer-link">Feedback</button><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></footer>
+    </main>
+
+    <!-- Game -->
+    <!-- Play with friends: rooms, challenges, game nights, friends -->
+    <main id="hub-screen" class="screen hub" hidden>
+      <section class="hub-hero">
+        <div class="hub-glow" aria-hidden="true"></div>
+        <p class="hub-kicker">Rooms</p>
+        <h1 class="hub-title">Play with friends</h1>
+        <p class="hub-sub">Make a room, send the code, race your crew around the world.</p>
+        <div class="hub-actions">
+          <button type="button" id="hub-create-btn" class="btn primary hub-big"><span aria-hidden="true">＋</span> Create a room</button>
+          <button type="button" id="hub-join-btn" class="btn hub-big"><span aria-hidden="true">🔑</span> Join with code</button>
+        </div>
+      </section>
+      <p id="hub-offline" class="muted center hub-offline" hidden>Rooms need an internet connection.</p>
+      <div id="hub-now" class="hub-now"></div>
+      <section class="hub-section">
+        <h3 class="sheet-sub">Your rooms</h3>
+        <div id="hub-rooms" class="hub-rooms"></div>
+      </section>
+      <section class="hub-section">
+        <div class="hub-duel">
+          <span class="hub-duel-icon" aria-hidden="true">⚔️</span>
+          <div class="hub-duel-text"><b>Quick duel</b><span>Dare a friend to beat your Daily. No room needed.</span></div>
+          <button type="button" id="hub-duel-btn" class="btn small primary">Challenge</button>
+        </div>
+      </section>
+      <section class="hub-section">
+        <h3 class="sheet-sub">Friends <span id="hub-friends-count" class="muted"></span></h3>
+        <div id="hub-friends" class="hub-friends"></div>
+        <button type="button" id="hub-friends-btn" class="btn wide">Add friends</button>
+      </section>
+    </main>
+
+    <main id="game-screen" class="screen" hidden>
+      <div id="globe-wrap">
+        <canvas id="globe-canvas" width="420" height="420" tabindex="0" role="img"
+                aria-label="Globe showing your guesses. Drag or use arrow keys to rotate, scroll or pinch to zoom."></canvas>
+        <div class="globe-hud">
+          <span id="mode-chip" class="chip"></span>
+          <span id="guess-chip" class="chip"></span>
+        </div>
+        <span id="trend" class="trend" role="status" aria-live="polite" hidden></span>
+        <div class="heat-scale" aria-hidden="true"><span>Far</span><i></i><span>Close</span></div>
+        <div class="zoom-ctrl">
+          <button id="zoom-in" class="zoom-btn" aria-label="Zoom in" title="Zoom in">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>
+          </button>
+          <button id="zoom-out" class="zoom-btn" aria-label="Zoom out" title="Zoom out">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg>
+          </button>
+        </div>
+        <!-- 🔭 Spyglass: every country's name, for one Daily (spyglass.js) -->
+        <button type="button" id="spy-btn" class="spy-btn" aria-label="Spyglass" hidden>
+          <span class="spy-icon" aria-hidden="true">🔭</span><span class="spy-count">0</span>
+        </button>
+      </div>
+
+      <div id="history-wrap">
+        <!-- Tips during the first game, docked under the globe (coach.js) -->
+        <div id="coach" class="coach" role="status" aria-live="polite" hidden></div>
+        <!-- One tap for the first guess: three big countries far apart (game.js renderStarter) -->
+        <div id="starter" class="starter" hidden>
+          <p class="starter-label">Tap one to start, or type any country</p>
+          <div class="starter-chips"></div>
+        </div>
+        <p id="history-empty" class="history-empty">Type a country to start. Drag the globe to look around.</p>
+        <ol id="history-list" aria-label="Your guesses, newest first"></ol>
+        <div id="pin-panel" class="pin-panel" hidden></div>
+        <p id="atlas-panel" class="atlas-panel" hidden>Every country is named. Zoom in for the small ones.</p>
+      </div>
+
+      <div id="input-bar">
+        <div id="autocomplete-list" class="ac-list" role="listbox" aria-label="Country suggestions"></div>
+        <button type="button" id="hint-pill" class="hint-pill" aria-label="Your hints about the mystery country" hidden></button>
+        <button type="button" id="trivia-offer" class="hint-pill trivia-offer" hidden>🎁 Win a hint · quick quiz</button>
+        <div id="story-riddles" class="story-riddles" hidden>
+          <span class="story-riddles-label">Riddles</span>
+          <ol id="story-riddles-list"></ol>
+        </div>
+        <form id="guess-form" class="input-row" autocomplete="off">
+          <input type="text" id="guess-input" placeholder="Type a country…" autocomplete="off" autocapitalize="words"
+                 spellcheck="false" enterkeyhint="go" aria-label="Guess a country"
+                 aria-autocomplete="list" aria-controls="autocomplete-list" />
+          <button type="submit" id="guess-btn" class="btn primary">Guess</button>
+        </form>
+        <div id="pin-actions" class="input-row" hidden>
+          <button type="button" id="pin-back" class="btn">💬 Chat</button>
+          <button type="button" id="pin-lock" class="btn primary" disabled>Tap the globe to drop a pin</button>
+        </div>
+        <div id="gameover-actions" class="input-row" hidden>
+          <button id="gameover-result-btn" class="btn">See result</button>
+          <button id="gameover-again-btn" class="btn primary">Play again</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Story: chapter select ("the map table") -->
+    <main id="story-screen" class="screen" hidden>
+      <div class="story-chapters-header">
+        <button id="story-back-btn" class="icon-btn" aria-label="Back to home">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <h1 class="story-chapters-title">The Unmaking</h1>
+        <div class="story-chapters-actions">
+          <button id="story-journal-btn" class="icon-btn" aria-label="Map Journal" title="Map Journal" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15Z"/></svg>
+          </button>
+          <button id="story-sound-btn" class="icon-btn" aria-label="Sound" title="Sound" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5ZM15.5 8.5a5 5 0 0 1 0 7"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="story-chapters-wrap">
+        <ol id="story-chapters-list" aria-label="Chapters"></ol>
+      </div>
+    </main>
+  </div>
+
+  <!-- Story: chapter title card / main title card (letterbox) -->
+  <div id="story-titlecard" class="story-card" hidden>
+    <div class="story-card-bar story-card-bar-top"></div>
+    <div class="story-card-bar story-card-bar-bottom"></div>
+    <div class="story-card-content">
+      <p id="story-titlecard-num" class="story-card-num"></p>
+      <h2 id="story-titlecard-title" class="story-card-title"></h2>
+      <p id="story-titlecard-recap" class="story-card-recap"></p>
+    </div>
+  </div>
+
+  <!-- Story: comms panel (briefings, found/outro, reveal, endings) -->
+  <div id="story-comms" class="story-comms" hidden>
+    <div id="story-comms-portrait" class="story-comms-portrait needle-wrap">
+      <svg id="story-comms-needle-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" class="needle-char mood-neutral" role="img" aria-label="Needle, a brass compass with one eye">
+        <defs>
+          <radialGradient id="nd-brass" cx="40%" cy="35%" r="70%">
+            <stop offset="0" stop-color="#f6dd95"/><stop offset="0.45" stop-color="#c9a04a"/><stop offset="1" stop-color="#7d5e1f"/>
+          </radialGradient>
+          <radialGradient id="nd-glass" cx="45%" cy="40%" r="65%">
+            <stop offset="0" stop-color="#fbf7ec"/><stop offset="1" stop-color="#e6dcc3"/>
+          </radialGradient>
+          <clipPath id="nd-eye-clip"><ellipse cx="60" cy="72" rx="20" ry="15"/></clipPath>
+        </defs>
+        <circle cx="60" cy="14" r="8" fill="none" stroke="url(#nd-brass)" stroke-width="4"/>
+        <rect x="55" y="18" width="10" height="9" rx="2" fill="url(#nd-brass)"/>
+        <circle cx="60" cy="72" r="44" fill="url(#nd-brass)"/>
+        <circle cx="60" cy="72" r="44" fill="none" stroke="#5e4614" stroke-width="1.5" opacity="0.6"/>
+        <circle cx="60" cy="72" r="36" fill="url(#nd-glass)"/>
+        <g stroke="#8a7a55" stroke-width="1.2" stroke-linecap="round" opacity="0.7">
+          <line x1="60" y1="38" x2="60" y2="44"/><line x1="60" y1="100" x2="60" y2="106"/>
+          <line x1="26" y1="72" x2="32" y2="72"/><line x1="88" y1="72" x2="94" y2="72"/>
+        </g>
+        <text x="60" y="47" text-anchor="middle" font-family="Georgia, serif" font-size="8" fill="#8a7a55" opacity="0.8">N?</text>
+        <g id="nd-needle">
+          <path d="M60 40 L65 72 L60 76 L55 72 Z" fill="#e5484d"/>
+          <path d="M60 104 L65 72 L60 68 L55 72 Z" fill="#f4f1ea" stroke="#b9ae93" stroke-width="0.6"/>
+        </g>
+        <ellipse cx="60" cy="72" rx="20" ry="15" fill="#ffffff" stroke="#3a2f1a" stroke-width="1.6"/>
+        <g clip-path="url(#nd-eye-clip)">
+          <g id="nd-pupil"><circle cx="60" cy="73" r="8" fill="#1b1611"/><circle cx="63" cy="70" r="2.4" fill="#ffffff"/></g>
+          <rect id="nd-lid" x="38" y="42" width="44" height="16" fill="#c9a04a"/>
+        </g>
+        <path id="nd-brow" d="M41 56 Q60 49 79 56" fill="none" stroke="#3a2f1a" stroke-width="2.4" stroke-linecap="round"/>
+        <g id="nd-sparkle" opacity="0"><path d="M92 40 l2 5 l5 2 l-5 2 l-2 5 l-2-5 l-5-2 l5-2 z" fill="#ffd36b"/></g>
+        <path id="nd-tear" d="M75 86 q3 6 0 9 q-3-3 0-9 z" fill="#7fb7ff" opacity="0"/>
+        <path id="nd-crack" d="M44 50 L54 63 L49 70 L62 84 L58 92" fill="none" stroke="#1b1611" stroke-width="1.4" opacity="0"/>
+        <path d="M38 54 Q46 42 60 40" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+      </svg>
+    </div>
+    <div class="story-comms-body">
+      <span id="story-comms-name" class="story-comms-name"></span>
+      <p id="story-comms-text" class="story-comms-text"></p>
+      <div id="story-comms-choices" class="story-comms-choices" hidden>
+        <button type="button" id="story-sound-yes" class="btn primary small"></button>
+        <button type="button" id="story-sound-no" class="btn small"></button>
+      </div>
+    </div>
+    <button type="button" id="story-comms-skip" class="btn ghost small story-comms-skip">Skip</button>
+  </div>
+
+  <!-- Story: bark bubble (mini Needle, top-left of the globe during the hunt) -->
+  <div id="story-bark" class="story-bark" hidden>
+    <div id="story-bark-needle" class="story-bark-needle needle-wrap">
+      <svg id="story-bark-needle-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" class="needle-char mood-neutral" role="img" aria-hidden="true">
+        <defs>
+          <radialGradient id="ndm-brass" cx="40%" cy="35%" r="70%">
+            <stop offset="0" stop-color="#f6dd95"/><stop offset="0.45" stop-color="#c9a04a"/><stop offset="1" stop-color="#7d5e1f"/>
+          </radialGradient>
+          <radialGradient id="ndm-glass" cx="45%" cy="40%" r="65%">
+            <stop offset="0" stop-color="#fbf7ec"/><stop offset="1" stop-color="#e6dcc3"/>
+          </radialGradient>
+          <clipPath id="ndm-eye-clip"><ellipse cx="60" cy="72" rx="20" ry="15"/></clipPath>
+        </defs>
+        <circle cx="60" cy="14" r="8" fill="none" stroke="url(#ndm-brass)" stroke-width="4"/>
+        <rect x="55" y="18" width="10" height="9" rx="2" fill="url(#ndm-brass)"/>
+        <circle cx="60" cy="72" r="44" fill="url(#ndm-brass)"/>
+        <circle cx="60" cy="72" r="44" fill="none" stroke="#5e4614" stroke-width="1.5" opacity="0.6"/>
+        <circle cx="60" cy="72" r="36" fill="url(#ndm-glass)"/>
+        <g id="ndm-needle">
+          <path d="M60 40 L65 72 L60 76 L55 72 Z" fill="#e5484d"/>
+          <path d="M60 104 L65 72 L60 68 L55 72 Z" fill="#f4f1ea" stroke="#b9ae93" stroke-width="0.6"/>
+        </g>
+        <ellipse cx="60" cy="72" rx="20" ry="15" fill="#ffffff" stroke="#3a2f1a" stroke-width="1.6"/>
+        <g clip-path="url(#ndm-eye-clip)">
+          <g id="ndm-pupil"><circle cx="60" cy="73" r="8" fill="#1b1611"/><circle cx="63" cy="70" r="2.4" fill="#ffffff"/></g>
+          <rect id="ndm-lid" x="38" y="42" width="44" height="16" fill="#c9a04a"/>
+        </g>
+        <path id="ndm-brow" d="M41 56 Q60 49 79 56" fill="none" stroke="#3a2f1a" stroke-width="2.4" stroke-linecap="round"/>
+        <g id="ndm-sparkle" opacity="0"><path d="M92 40 l2 5 l5 2 l-5 2 l-2 5 l-2-5 l-5-2 l5-2 z" fill="#ffd36b"/></g>
+        <path id="ndm-tear" d="M75 86 q3 6 0 9 q-3-3 0-9 z" fill="#7fb7ff" opacity="0"/>
+        <path id="ndm-crack" d="M44 50 L54 63 L49 70 L62 84 L58 92" fill="none" stroke="#1b1611" stroke-width="1.4" opacity="0"/>
+      </svg>
+    </div>
+    <p id="story-bark-text" class="story-bark-text"></p>
+  </div>
+
+  <!-- Story: Kaelor's (code: varka) full-width handwriting intrusion -->
+  <div id="story-varka" class="story-varka" hidden>
+    <p id="story-varka-text" class="story-varka-text"></p>
+  </div>
+
+  <!-- Story: cold-open's simple tap-to-burn stain (M4 placeholder for M5's hold-to-burn) -->
+  <div id="story-stain" class="story-stain" hidden>
+    <button type="button" id="story-stain-btn" class="story-stain-btn" aria-label="Burn the stain"></button>
+  </div>
+
+  <!-- Story: HOLD TO BURN (M5) -->
+  <div id="story-burn" class="story-burn" hidden>
+    <button type="button" id="story-burn-btn" class="story-burn-btn" aria-label="Hold to burn the Shadow">
+      <svg class="story-burn-ring" viewBox="0 0 104 104" aria-hidden="true">
+        <circle cx="52" cy="52" r="46" class="story-burn-ring-bg" />
+        <circle cx="52" cy="52" r="46" class="story-burn-ring-fg" />
+      </svg>
+      <span class="story-burn-label">HOLD TO BURN</span>
+    </button>
+    <p id="story-burn-hint" class="story-burn-hint" role="status" hidden></p>
+  </div>
+
+  <!-- Story: full-screen burn flash (M5) -->
+  <div id="story-flash" class="story-flash" hidden></div>
+
+  <!-- Story: postcard (M5) -->
+  <div id="story-postcard" class="story-postcard-wrap" hidden>
+    <div id="story-postcard-card" class="story-postcard">
+      <div class="story-postcard-flag" id="story-postcard-flag"></div>
+      <h2 id="story-postcard-name" class="story-postcard-name"></h2>
+      <p id="story-postcard-facts" class="story-postcard-facts"></p>
+      <p id="story-postcard-lore" class="story-postcard-lore"></p>
+      <div id="story-postcard-seal" class="story-postcard-seal"></div>
+      <span id="story-postcard-foil" class="story-postcard-foil" hidden>FOIL</span>
+    </div>
+    <button type="button" id="story-postcard-next-btn" class="btn primary story-postcard-next">Continue</button>
+  </div>
+
+  <!-- Story: chapter complete (M5) -->
+  <div id="story-complete" class="story-complete" hidden>
+    <div class="story-complete-stars" id="story-complete-stars">
+      <span class="story-star"></span><span class="story-star"></span><span class="story-star"></span>
+    </div>
+    <p id="story-complete-saved" class="story-complete-saved"></p>
+    <p id="story-complete-title" class="story-complete-title"></p>
+    <p id="story-complete-cliffhanger" class="story-complete-cliffhanger"></p>
+    <p id="story-complete-echo" class="story-complete-cliffhanger story-complete-echo" hidden></p>
+    <p id="story-complete-next" class="story-complete-next" hidden></p>
+    <div class="story-complete-actions">
+      <button type="button" id="story-complete-share-btn" class="btn">Share</button>
+      <button type="button" id="story-complete-continue-btn" class="btn primary">Continue</button>
+      <button type="button" id="story-complete-next-btn" class="btn primary" hidden></button>
+    </div>
+  </div>
+
+  <!-- Story: the choice (M7, spec §10) -->
+  <div id="story-choice" class="story-choice" hidden>
+    <p class="story-choice-hint" id="story-choice-hint"></p>
+    <button type="button" id="story-keep-btn" class="btn story-keep-btn"></button>
+  </div>
+
+  <!-- Story: credits (M7) -->
+  <div id="story-credits" class="story-credits" hidden>
+    <p id="story-credits-line" class="story-credits-line"></p>
+  </div>
+
+  <!-- Story: the end (M7) -->
+  <div id="story-end" class="story-complete" hidden>
+    <p class="story-complete-title" id="story-end-title"></p>
+    <p class="story-complete-saved" id="story-end-share"></p>
+    <p class="story-complete-cliffhanger" id="story-end-score"></p>
+    <p class="story-end-split" id="story-end-split" hidden></p>
+    <div class="story-complete-actions">
+      <button type="button" id="story-end-share-btn" class="btn">Share</button>
+      <button type="button" id="story-end-continue-btn" class="btn primary">Continue</button>
+    </div>
+  </div>
+
+  <!-- Story: Map Journal (M7) -->
+  <dialog id="story-journal" class="sheet story-journal" aria-labelledby="story-journal-title">
+    <h2 id="story-journal-title" class="sheet-title">Map Journal</h2>
+    <ol id="story-journal-grid" class="story-journal-grid"></ol>
+    <p id="story-journal-empty" class="muted center" hidden>Burn a Shadow to earn your first postcard.</p>
+    <div id="story-secret" class="story-secret" hidden>
+      <h3 id="story-secret-title" class="story-secret-title"></h3>
+      <div id="story-secret-body"></div>
+      <p id="story-secret-signoff" class="story-secret-signoff"></p>
+    </div>
+    <div class="sheet-actions">
+      <button type="button" id="story-journal-close-btn" class="btn">Close</button>
+    </div>
+  </dialog>
+
+  <!-- Rooms: join with a code -->
+  <dialog id="rooms-dialog" class="sheet" aria-labelledby="rooms-title-h">
+    <h2 id="rooms-title-h" class="sheet-title">Join a room</h2>
+    <p class="muted rooms-intro">Got a code from a friend? Pop it in.</p>
+    <form id="room-join-form" class="input-row rooms-form" autocomplete="off">
+      <input type="text" id="room-code-input" maxlength="6" autocapitalize="characters" spellcheck="false" placeholder="ABC123" aria-label="Room code" />
+      <button type="submit" class="btn primary">Join</button>
+    </form>
+    <p id="rooms-error" class="form-error" role="alert" hidden></p>
+    <div class="sheet-actions">
+      <button type="button" id="rooms-close-btn" class="btn">Close</button>
+    </div>
+  </dialog>
+
+  <!-- Rooms: a new room -->
+  <dialog id="room-create-dialog" class="sheet rc-sheet" aria-labelledby="rc-title">
+    <h2 id="rc-title" class="sheet-title">New room</h2>
+    <div class="rc-preview"><span id="rc-emoji-big" class="rc-emoji-big">🌍</span></div>
+    <form id="room-create-form" class="input-row rooms-form" autocomplete="off">
+      <input type="text" id="room-name-input" maxlength="40" placeholder="Room name" aria-label="Room name" />
+      <button type="submit" class="btn primary">Create</button>
+    </form>
+    <p id="rc-error" class="form-error" role="alert" hidden></p>
+    <h3 class="sheet-sub">Emoji</h3>
+    <div id="rc-emojis" class="rc-emojis" role="group" aria-label="Room emoji"></div>
+    <h3 class="sheet-sub">Ideas</h3>
+    <div id="rc-ideas" class="rc-ideas"></div>
+    <p class="muted rc-note">You can run up to 3 rooms. Each holds 50 players.</p>
+    <div class="sheet-actions">
+      <button type="button" id="rc-cancel" class="btn ghost">Cancel</button>
+    </div>
+  </dialog>
+
+  <!-- Rooms: a new challenge -->
+  <dialog id="challenge-new-dialog" class="sheet" aria-labelledby="cn-title">
+    <h2 id="cn-title" class="sheet-title">New challenge</h2>
+    <p class="muted cn-intro">5 countries. Everyone in <b id="cn-room"></b> gets the same ones and has 24 hours.</p>
+    <h3 class="sheet-sub">Where</h3>
+    <div id="cn-themes" class="cn-grid" role="group" aria-label="Where"></div>
+    <h3 class="sheet-sub">Pace</h3>
+    <div id="cn-modes" class="cn-grid two" role="group" aria-label="Pace"></div>
+    <p id="cn-error" class="form-error" role="alert" hidden></p>
+    <div class="sheet-actions">
+      <button type="button" id="cn-cancel" class="btn ghost">Cancel</button>
+      <button type="button" id="cn-go" class="btn primary">Start challenge</button>
+    </div>
+  </dialog>
+
+  <!-- Rooms: one room -->
+  <dialog id="room-dialog" class="sheet room-sheet" aria-labelledby="room-name">
+    <div class="room-head"><span id="room-emoji" class="room-emoji" aria-hidden="true"></span><h2 id="room-name" class="sheet-title"></h2></div>
+    <p id="room-meta" class="muted room-meta"></p>
+    <div id="room-live" class="room-live" hidden>
+      <span><b>Game night is on</b> — join in</span>
+      <button type="button" id="room-live-btn" class="btn primary small">Join</button>
+    </div>
+    <div class="room-actions">
+      <button type="button" id="room-challenge-btn" class="room-action hot"><span aria-hidden="true">⚡</span>New challenge</button>
+      <button type="button" id="room-night-btn" class="room-action" hidden><span aria-hidden="true">🎉</span>Game night</button>
+      <button type="button" id="room-invite-btn" class="room-action"><span aria-hidden="true">📨</span>Invite</button>
+    </div>
+    <div id="room-challenges" class="room-challenges"></div>
+    <div class="room-invite">
+      <span class="muted">Invite</span>
+      <b id="room-code"></b>
+      <button type="button" id="room-share-btn" class="btn small">Share link</button>
+    </div>
+    <div class="seg room-tabs" role="group" aria-label="Standings">
+      <button class="seg-btn" data-period="today">Today</button>
+      <button class="seg-btn" data-period="week">Week</button>
+      <button class="seg-btn" data-period="all">All-time</button>
+      <button class="seg-btn" data-period="nights">Nights</button>
+    </div>
+    <ol id="room-board" class="lb-list room-board"></ol>
+    <p id="room-board-empty" class="muted center lb-empty" hidden></p>
+    <button type="button" id="room-play-btn" class="btn primary lb-cta" hidden>Play today’s Daily</button>
+    <h3 class="sheet-sub">Game night</h3>
+    <p class="muted room-night-note">Play live with everyone in the room: rounds against the clock, one scoreboard. Whoever starts it hosts it. Needs at least 2 players.</p>
+    <div class="room-night-form">
+      <label>Rounds <select id="night-rounds"><option>3</option><option selected>5</option><option>7</option><option>10</option></select></label>
+      <label>Each <select id="night-seconds"><option value="60">1 min</option><option value="90">1½ min</option><option value="120" selected>2 min</option><option value="180">3 min</option></select></label>
+      <button type="button" id="night-start-btn" class="btn primary small">Start game night</button>
+    </div>
+    <h3 class="sheet-sub">Activity <span class="muted feed-span">· last 3 days</span></h3>
+    <ol id="room-feed" class="room-feed"></ol>
+    <h3 class="sheet-sub">Members</h3>
+    <ol id="room-members" class="room-members"></ol>
+    <div id="room-manage" hidden>
+      <h3 class="sheet-sub">Manage</h3>
+      <div class="room-manage-actions">
+        <button type="button" id="room-rename-btn" class="btn small">Rename</button>
+        <button type="button" id="room-reset-btn" class="btn small">New invite link</button>
+        <button type="button" id="room-close-room-btn" class="btn small danger">Close room</button>
+      </div>
+    </div>
+    <p id="room-error" class="form-error" role="alert" hidden></p>
+    <div class="sheet-actions">
+      <button type="button" id="room-leave-btn" class="btn ghost" hidden>Leave room</button>
+      <button type="button" id="room-close-btn" class="btn">Close</button>
+    </div>
+  </dialog>
+
+  <!-- Rooms: join from an invite link -->
+  <dialog id="room-join-dialog" class="sheet" aria-labelledby="room-join-name">
+    <p class="sheet-kicker">You’re invited to</p>
+    <h2 id="room-join-name" class="sheet-title"></h2>
+    <p id="room-join-meta" class="muted"></p>
+    <p id="room-join-guest" class="muted room-guest-note" hidden>You’re playing as a guest, so this room is saved on this device. Sign in with Google any time to keep it everywhere.</p>
+    <p id="room-join-error" class="form-error" role="alert" hidden></p>
+    <div class="sheet-actions">
+      <button type="button" id="room-join-cancel" class="btn ghost">Not now</button>
+      <button type="button" id="room-join-ok" class="btn primary">Join room</button>
+    </div>
+  </dialog>
+
+  <!-- Rooms: a live game night (also the big-screen TV view) -->
+  <div id="night" class="night" hidden>
+    <div class="night-head">
+      <p id="night-room" class="night-room"></p>
+      <h2 id="night-title" class="night-title"></h2>
+      <p id="night-sub" class="night-sub"></p>
+    </div>
+    <div id="night-reveal" class="night-reveal" hidden></div>
+    <ol id="night-board" class="night-board"></ol>
+    <div class="night-actions">
+      <button type="button" id="night-primary" class="btn primary" hidden></button>
+      <button type="button" id="night-tv" class="btn small ghost" hidden>Show on a TV</button>
+      <button type="button" id="night-leave" class="btn ghost">Leave</button>
+    </div>
+  </div>
+
+  <!-- Rooms: a challenge (intro, between rounds, results) -->
+  <div id="challenge" class="night challenge" hidden>
+    <div class="night-head">
+      <p id="ch-room" class="night-room"></p>
+      <h2 id="ch-title" class="night-title"></h2>
+      <p id="ch-sub" class="night-sub"></p>
+    </div>
+    <div id="ch-dots" class="ch-dots" aria-hidden="true"></div>
+    <div id="ch-reveal" class="night-reveal ch-reveal" hidden></div>
+    <div id="ch-rivalry" class="ch-rivalry" hidden></div>
+    <ol id="ch-board" class="night-board"></ol>
+    <div class="night-actions">
+      <button type="button" id="ch-primary" class="btn primary" hidden></button>
+      <button type="button" id="ch-share" class="btn" hidden>Share my score</button>
+      <button type="button" id="ch-rematch" class="btn" hidden>Rematch</button>
+      <button type="button" id="ch-leave" class="btn ghost">Back to the room</button>
+    </div>
+    <canvas id="ch-confetti" class="ch-confetti" aria-hidden="true"></canvas>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- Result -->
+  <dialog id="result-dialog" class="sheet result" aria-labelledby="result-country" tabindex="-1">
+    <div class="result-top">
+      <span id="result-label" class="result-label"></span>
+      <button type="button" id="result-x-btn" class="result-x" aria-label="Close">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div id="result-flag" class="result-flag"></div>
+    <p id="result-kicker" class="result-kicker"></p>
+    <h2 id="result-country" class="result-country"></h2>
+    <p id="result-sub" class="result-sub"></p>
+
+    <div id="result-pct" class="result-pct" hidden>
+      <div class="rp-row">
+        <div class="rp-num"><span id="result-pct-num" class="rp-big"></span><span class="rp-unit">percentile</span></div>
+        <div class="rp-text">
+          <span id="result-pct-head" class="rp-head"></span>
+          <span id="result-pct-line" class="rp-line"></span>
+        </div>
+      </div>
+      <div class="rp-bar" aria-hidden="true"><span id="result-pct-fill" class="rp-fill"></span><span id="result-pct-dot" class="rp-dot"></span></div>
+    </div>
+    <p id="result-early" class="result-early" hidden></p>
+
+    <div id="result-dist" class="result-dist" hidden>
+      <div class="rd-head">
+        <h3 class="rd-title">Guesses it took everyone</h3>
+        <span id="result-dist-n" class="rd-n"></span>
+      </div>
+      <div id="result-dist-bars" class="rd-bars" role="img"></div>
+    </div>
+
+    <div id="result-tiles" class="result-tiles" hidden>
+      <div class="r-tile">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="rt-ic"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <div class="rt-text"><span class="rt-label">Next country</span><span id="result-next" class="rt-val tabular"></span></div>
+      </div>
+      <div id="result-streak-tile" class="r-tile">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="rt-ic fire"><path d="M12 3c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-7 1-10z"/></svg>
+        <div class="rt-text"><span class="rt-label">Streak</span><span id="result-streak" class="rt-val"></span></div>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn primary result-share" data-share="native">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
+        <span>Share result</span>
+      </button>
+      <div class="result-pair">
+        <button id="result-lb-btn" class="btn">Leaderboard</button>
+        <button id="result-again-btn" class="btn">Play Classic</button>
+      </div>
+    </div>
+    <p class="result-links">
+      <button type="button" id="result-close-btn" class="link-btn">View globe</button><span id="result-links-dot" aria-hidden="true"> · </span><button type="button" id="result-bd-btn" class="link-btn" aria-expanded="false" aria-controls="result-breakdown">Score breakdown</button>
+    </p>
+    <div id="result-breakdown" class="breakdown" hidden></div>
+  </dialog>
+
+  <!-- Badge unlocked card -->
+  <dialog id="badge-dialog" class="sheet badge-card" aria-labelledby="bc-title" aria-describedby="bc-desc">
+    <p class="sheet-kicker bc-kicker"><span id="bc-kicker-text">Badge unlocked</span> <span id="bc-step" class="bc-step" hidden></span></p>
+    <div class="bc-medal" aria-hidden="true"><span class="bc-rays"></span><span id="bc-icon" class="bc-icon"></span></div>
+    <h2 id="bc-title" class="bc-title"></h2>
+    <p id="bc-desc" class="bc-desc"></p>
+    <p id="bc-special" class="bc-special" hidden></p>
+    <p id="bc-count" class="muted bc-count"></p>
+    <button type="button" id="bc-next-btn" class="btn primary wide">Nice!</button>
+    <div class="bc-actions">
+      <button type="button" id="bc-share-btn" class="btn ghost small">Share</button>
+      <button type="button" id="bc-all-btn" class="btn ghost small">See all badges</button>
+    </div>
+  </dialog>
+
+  <!-- Passport and badges -->
+  <dialog id="passport-dialog" class="sheet passport-sheet" aria-labelledby="passport-title">
+    <h2 id="passport-title" class="sheet-title">Your passport</h2>
+    <div class="seg seg-2" role="group" aria-label="Passport or badges">
+      <button class="seg-btn" data-ptab="passport">Countries</button>
+      <button class="seg-btn" data-ptab="badges">Badges</button>
+    </div>
+    <div id="passport-panel">
+      <p class="pp-head"><b id="pp-count">0</b> / <span id="pp-total">197</span> countries</p>
+      <div class="pp-track pp-main"><i id="pp-bar"></i></div>
+      <div id="pp-continents" class="pp-continents"></div>
+      <div id="pp-grid" class="pp-grid"></div>
+    </div>
+    <div id="badges-panel" hidden>
+      <p class="muted" id="badge-count"></p>
+      <ul id="badge-list" class="badge-list"></ul>
+    </div>
+    <!-- Trophy cabinet: one badge at a time, swipe for the next; Back returns to the list -->
+    <div id="trophy-panel" class="trophy-panel" hidden>
+      <div class="trophy-top">
+        <button type="button" id="trophy-back" class="btn ghost small trophy-back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Badges
+        </button>
+        <span id="trophy-pos" class="muted trophy-pos" aria-live="polite"></span>
+      </div>
+      <div id="trophy-track" class="trophy-track" tabindex="0" aria-label="Badges, swipe for the next one"></div>
+      <div class="trophy-nav">
+        <button type="button" id="trophy-prev" class="icon-btn" aria-label="Previous badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button type="button" id="trophy-next" class="icon-btn" aria-label="Next badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button id="passport-close-btn" class="btn">Close</button>
+    </div>
+  </dialog>
+
+  <!-- Stats -->
+  <dialog id="stats-dialog" class="sheet" aria-labelledby="stats-title">
+    <h2 id="stats-title" class="sheet-title">Statistics</h2>
+    <div class="seg" role="group" aria-label="Filter by mode">
+      <button class="seg-btn" data-tab="all">All</button>
+      <button class="seg-btn" data-tab="daily">Daily</button>
+      <button class="seg-btn" data-tab="classic">Classic</button>
+    </div>
+    <div class="stat-hero">
+      <div class="win-ring" id="st-ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-bg" cx="60" cy="60" r="52"/><circle class="ring-fg" cx="60" cy="60" r="52"/></svg>
+        <div class="ring-text"><b id="st-win">0%</b><span>wins</span></div>
+      </div>
+      <p class="stat-blurb" id="st-blurb" aria-live="polite"></p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><b id="st-played">0</b><span>Played</span></div>
+      <div class="stat"><b id="st-wins">0</b><span>Wins</span></div>
+      <div class="stat"><b id="st-streak">0</b><span>Daily streak</span></div>
+      <div class="stat"><b id="st-best">0</b><span>Best streak</span></div>
+      <div class="stat"><b id="st-avg">—</b><span>Avg guesses</span></div>
+      <div class="stat"><b id="st-top">0</b><span>Best score</span></div>
+    </div>
+    <h3 class="sheet-sub">Guesses to find it</h3>
+    <div id="st-dist" class="dist"></div>
+    <p id="st-empty" class="muted center">No games yet — play one!</p>
+    <div class="sheet-actions">
+      <button id="stats-close-btn" class="btn">Close</button>
+    </div>
+  </dialog>
+
+  <!-- Account -->
+  <dialog id="account-dialog" class="sheet" aria-labelledby="account-title">
+    <h2 id="account-title" class="sheet-title">Account</h2>
+    <p id="account-status" class="account-status"></p>
+    <p id="account-note" class="muted account-note"></p>
+    <div id="role-row" class="username-row" hidden>
+      <span class="muted">Access</span>
+      <b id="role-value"></b>
+    </div>
+    <div id="username-row" class="username-row" hidden>
+      <span class="muted">Leaderboard name</span>
+      <b id="username-value"></b>
+      <button id="username-edit-btn" class="btn small"></button>
+    </div>
+    <div id="push-row" class="username-row" hidden>
+      <span class="muted">Notifications</span>
+      <b id="push-state"></b>
+      <button id="push-row-btn" class="btn small">Settings</button>
+    </div>
+    <div id="scar-row" class="username-row" hidden>
+      <span class="muted">Point Nemo scar</span>
+      <b id="scar-state"></b>
+      <button id="scar-toggle-btn" class="btn small"></button>
+    </div>
+    <button id="google-btn" class="btn google-btn" hidden>
+      <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.8c4.3-4 6.9-9.9 6.9-17.2z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.8c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.8l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>
+      Continue with Google
+    </button>
+    <div id="google-gis" class="google-gis" hidden></div>
+    <div class="sheet-actions">
+      <button id="signout-btn" class="btn ghost" hidden>Sign out</button>
+      <button id="account-close-btn" class="btn">Close</button>
+    </div>
+    <p class="account-legal"><a href="privacy.html">Privacy policy</a></p>
+  </dialog>
+
+  <!-- Username -->
+  <dialog id="username-dialog" class="sheet" aria-labelledby="username-title">
+    <h2 id="username-title" class="sheet-title">Pick a name</h2>
+    <p id="username-subtitle" class="muted">Shown to other players on leaderboards. 3–20 letters, numbers or _.</p>
+    <form id="username-form" class="input-row username-form" autocomplete="off">
+      <input type="text" id="username-input" maxlength="20" autocomplete="off" autocapitalize="off"
+             spellcheck="false" enterkeyhint="done" aria-label="Leaderboard name" placeholder="e.g. globetrotter" />
+      <button type="submit" id="username-save-btn" class="btn primary">Save</button>
+    </form>
+    <p id="username-error" class="form-error" role="alert" hidden></p>
+    <div class="sheet-actions">
+      <button type="button" id="username-cancel-btn" class="btn ghost">Cancel</button>
+    </div>
+  </dialog>
+
+  <!-- Daily leaderboard -->
+  <dialog id="lb-dialog" class="sheet" aria-labelledby="lb-title">
+    <h2 id="lb-title" class="sheet-title">Daily leaderboard</h2>
+    <div class="seg seg-2 lb-board" role="group" aria-label="Which game">
+      <button class="seg-btn" data-board="daily">Daily</button>
+      <button class="seg-btn" data-board="classic">Classic</button>
+    </div>
+    <div class="seg seg-2 lb-scope" role="group" aria-label="Whose scores">
+      <button class="seg-btn" data-scope="all">Everyone</button>
+      <button class="seg-btn" data-scope="friends">Friends</button>
+    </div>
+    <div class="seg seg-2" role="group" aria-label="Which day or week">
+      <button class="seg-btn" data-lb="today">Today</button>
+      <button class="seg-btn" data-lb="yesterday">Yesterday</button>
+    </div>
+    <p id="lb-sub" class="muted lb-sub"></p>
+    <ol id="lb-list" class="lb-list" aria-label="Rankings"></ol>
+    <p id="lb-empty" class="muted center lb-empty" hidden></p>
+    <button id="lb-cta" class="btn primary lb-cta" hidden></button>
+    <div class="sheet-actions">
+      <button id="lb-close-btn" class="btn">Close</button>
+    </div>
+  </dialog>
+
+  <!-- Friends -->
+  <dialog id="friends-dialog" class="sheet" aria-labelledby="friends-title">
+    <h2 id="friends-title" class="sheet-title">Friends</h2>
+    <p id="friends-note" class="muted friends-note" hidden></p>
+    <button id="friends-name-btn" class="btn primary wide" hidden>Pick a name</button>
+    <div id="friends-main" hidden>
+      <form id="friend-form" class="input-row" autocomplete="off">
+        <input type="text" id="friend-input" maxlength="20" autocomplete="off" autocapitalize="off"
+               spellcheck="false" enterkeyhint="send" aria-label="Friend’s leaderboard name" placeholder="Friend’s name" />
+        <button type="submit" id="friend-add-btn" class="btn primary">Add</button>
+      </form>
+      <p id="friend-msg" class="form-msg" role="status" hidden></p>
+      <button id="invite-btn" class="btn wide invite-btn">Share your invite link</button>
+      <button id="notify-btn" class="btn ghost wide notify-btn" hidden>🔔 Notify me about friend requests</button>
+      <div id="friends-lists"></div>
+    </div>
+    <div class="sheet-actions">
+      <button id="friends-close-btn" class="btn">Close</button>
+    </div>
+  </dialog>
+
+  <!-- Install (iPhone / iPad: no install prompt, so explain the steps) -->
+  <dialog id="install-dialog" class="sheet" aria-labelledby="install-title">
+    <h2 id="install-title" class="sheet-title">Install Borderline</h2>
+    <ol class="help-steps">
+      <li>Tap the <b>Share</b> button in Safari’s toolbar.</li>
+      <li>Scroll down and tap <b>Add to Home Screen</b>.</li>
+      <li>Tap <b>Add</b>. Borderline opens full-screen and works offline.</li>
+    </ol>
+    <div class="sheet-actions">
+      <button id="install-close-btn" class="btn primary">Got it</button>
+    </div>
+  </dialog>
+
+  <!-- Feedback (feedback.js) -->
+  <dialog id="feedback-dialog" class="sheet" aria-labelledby="feedback-title">
+    <h2 id="feedback-title" class="sheet-title">Send feedback</h2>
+    <form id="feedback-form" class="feedback-form" novalidate>
+      <div class="seg feedback-kinds" role="group" aria-label="What kind of feedback">
+        <button type="button" class="seg-btn" data-kind="bug">🐞 Bug</button>
+        <button type="button" class="seg-btn" data-kind="idea">💡 Idea</button>
+        <button type="button" class="seg-btn" data-kind="other">💬 Other</button>
+      </div>
+      <textarea id="feedback-text" class="feedback-text" rows="5" maxlength="2000" aria-label="Your message" required></textarea>
+      <input id="feedback-contact" class="feedback-contact" type="email" inputmode="email" autocomplete="email" maxlength="120"
+             placeholder="Email, if you’d like a reply (optional)" aria-label="Email for a reply (optional)" />
+      <p class="feedback-note">Sent with your leaderboard name and device details (phone or computer, browser, screen size), to help us fix things.</p>
+      <p id="feedback-error" class="push-msg" role="alert" hidden></p>
+      <div class="sheet-actions">
+        <button type="button" id="feedback-cancel" class="btn ghost">Cancel</button>
+        <button type="submit" id="feedback-send" class="btn primary">Send</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Notifications: asking, platform help, settings (notify.js) -->
+  <dialog id="push-dialog" class="sheet push-sheet" aria-labelledby="push-title">
+    <h2 id="push-title" class="sheet-title">Notifications</h2>
+    <div id="push-body"></div>
+    <p id="push-msg" class="push-msg" role="alert" hidden></p>
+    <div id="push-actions" class="sheet-actions"></div>
+    <button type="button" id="push-off-btn" class="link-btn push-off" hidden>Turn off on this device</button>
+  </dialog>
+
+  <!-- How to play -->
+  <dialog id="help-dialog" class="sheet" aria-labelledby="help-title">
+    <h2 id="help-title" class="sheet-title">How to play</h2>
+    <ol class="help-steps">
+      <li><b>Guess any country.</b> It lights up on the globe with a colour showing how close you are.</li>
+      <li><b>Follow the colour.</b> Blue = far away, shades through violet and crimson to dark red = very close.</li>
+      <li><b>Use the arrows.</b> Each guess points toward the answer.</li>
+      <li><b>Stuck?</b> From your 5th guess, tap <b>🎁 Win a hint</b> for a quick quiz. Get it right for a hint about the mystery country.</li>
+      <li><b>Stuck? Use a 🔭 spyglass</b> to see every country’s name. Earn one per 5-day streak (max 3).</li>
+      <li><b>Points = your rank.</b> Fewer guesses always wins (found in 3 = 800+). Ties go to the sharper aim: how close your earlier guesses landed.</li>
+    </ol>
+    <div class="legend">
+      <span><i class="sw cold"></i>Far (8,000 km+)</span>
+      <span><i class="sw cool"></i>Getting there</span>
+      <span><i class="sw warm"></i>Close</span>
+      <span><i class="sw hot"></i>Very close (&lt;1,500 km)</span>
+      <span><i class="sw adjacent"></i>Shares a border</span>
+      <span><i class="sw correct"></i>Found it</span>
+    </div>
+    <h3 class="sheet-sub">Modes</h3>
+    <ul class="help-modes">
+      <li><b>Daily</b> — one country for everyone, 10 guesses. New one every day.</li>
+      <li><b>Atlas</b> — the 🗺️ on the home screen: spin the globe with every country named.</li>
+      <li><b>Classic</b> — a random country, as many guesses as you need. Your best 10 finds each week count on the weekly Classic leaderboard.</li>
+      <li><b>The Unmaking</b> — story mode. Seven chapters, seven Shadows, one choice.</li>
+    </ul>
+    <div class="sheet-actions">
+      <button id="help-close-btn" class="btn primary">Got it</button>
+    </div>
+  </dialog>
+
+  <!-- 🔭 Spyglass: spend one (spyglass.js fills the text) -->
+  <dialog id="spy-dialog" class="sheet spy-sheet" aria-labelledby="spy-title">
+    <div class="spy-hero" aria-hidden="true">🔭</div>
+    <h2 id="spy-title" class="sheet-title spy-title"></h2>
+    <p class="spy-body"></p>
+    <p class="muted spy-meta"></p>
+    <div class="sheet-actions">
+      <button type="button" class="btn ghost spy-cancel">Not now</button>
+      <button type="button" class="btn primary spy-use">🔭 Use one</button>
+    </div>
+  </dialog>
+
+  <!-- Hints won in trivia -->
+  <dialog id="hints-dialog" class="sheet" aria-labelledby="hints-title">
+    <h2 id="hints-title" class="sheet-title">Your hints</h2>
+    <p class="muted hints-intro">About the mystery country. Win more with right trivia answers.</p>
+    <ol id="hints-list" class="hints-list"></ol>
+    <div class="sheet-actions">
+      <button type="button" id="hints-close-btn" class="btn primary">Back to the hunt</button>
+    </div>
+  </dialog>
+
+  <!-- Trivia -->
+  <dialog id="trivia-dialog" class="sheet" aria-labelledby="trivia-badge">
+    <p id="trivia-badge" class="sheet-kicker"></p>
+    <div class="timer" aria-hidden="true"><div id="trivia-timer-bar" class="timer-bar"></div></div>
+    <p id="trivia-timer-text" class="timer-text"></p>
+    <p id="trivia-country-label" class="muted"></p>
+    <p id="trivia-question" class="trivia-question"></p>
+    <div id="trivia-options" class="trivia-options" role="group" aria-labelledby="trivia-question"></div>
+    <div id="trivia-feedback" class="trivia-feedback" role="alert" hidden></div>
+    <div class="sheet-actions">
+      <button id="trivia-skip-btn" class="btn ghost">Skip</button>
+      <button id="trivia-continue-btn" class="btn primary" hidden>Continue</button>
+    </div>
+  </dialog>
+
+  <script src="i18n.js" defer></script>
+  <script src="countries.js" defer></script>
+  <script src="borders.js" defer></script>
+  <script src="data.js" defer></script>
+  <script src="trivia-options.js" defer></script>
+  <script src="country-facts.js" defer></script>
+  <script src="hints.js" defer></script>
+  <script src="story-data.js" defer></script>
+  <script src="home-country.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="gk-session.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" async></script>
+  <script src="store.js" defer></script>
+  <script src="cloud.js" defer></script>
+  <script src="analytics.js" defer></script>
+  <script src="scoring.js" defer></script>
+  <script src="story-audio.js" defer></script>
+  <script src="story.js" defer></script>
+  <script src="name-step.js" defer></script>
+  <script src="coach.js" defer></script>
+  <script src="spyglass.js" defer></script>
+  <script src="rooms.js" defer></script>
+  <script src="game.js" defer></script>
+  <script src="progress.js" defer></script>
+  <script src="notify.js" defer></script>
+  <script src="feedback.js" defer></script>
+  <script src="signal-data.js" defer></script>
+  <script src="pin.js" defer></script>
+  <script src="signal.js" defer></script>
+</body>
+</html>
