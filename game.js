@@ -172,22 +172,8 @@ function findCountry(raw) {
 }
 
 // ============================================================
-// Flag image helper — uses flagcdn.com (works on all platforms
-// including Windows where emoji flags render as letter pairs).
+// Flag image helper (makeFlagImg, flagHtml) is provided by countries.js
 // ============================================================
-function makeFlagImg(country, size = 20) {
-  const img = document.createElement('img');
-  const code = (country.code || '').toLowerCase();
-  if (code) {
-    img.src   = `https://flagcdn.com/w${size}/${code}.png`;
-    img.width  = size;
-    img.height = Math.round(size * 0.75);
-    img.alt    = country.flag || country.code || '';
-    img.loading = 'lazy';
-    img.onerror = () => { img.style.display = 'none'; }; // hide if fails to load
-  }
-  return img;
-}
 
 // ============================================================
 // State
@@ -1714,7 +1700,7 @@ function renderStarter() {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'starter-chip';
-    b.innerHTML = `<span class="flag" aria-hidden="true">${c.flag || ''}</span>${escHtml(cname(c.name))}`;
+    b.innerHTML = `<span class="flag" aria-hidden="true">${flagHtml(c, 20)}</span>${escHtml(cname(c.name))}`;
     b.addEventListener('click', () => {
       track('starter_pick', { mode: gameMode, country: c.name });
       submitGuess(c);
@@ -1866,7 +1852,14 @@ function openResult(r) {
   const ranked = daily || r.mode === 'classic';
 
   $('result-label').textContent   = daily ? t('Daily #{n}', { n: dailyNumber(r.day) }) : MODE_LABEL[r.mode];
-  $('result-flag').textContent    = r.mysteryFlag || '🌍';
+  const rf = $('result-flag');
+  rf.textContent = '';
+  const mysteryCountry = COUNTRIES.find(c => c.name === r.mysteryName) || (mystery && mystery.name === r.mysteryName ? mystery : null);
+  if (mysteryCountry && mysteryCountry.code) {
+    rf.appendChild(makeFlagImg(mysteryCountry, 80, 'result-flag-img'));
+  } else {
+    rf.textContent = r.mysteryFlag || '🌍';
+  }
   const kicker = $('result-kicker');
   kicker.textContent = r.won ? t('You found it') : t('Out of guesses · it was');
   kicker.classList.toggle('won', r.won);
@@ -2768,10 +2761,19 @@ function showTrivia(country) {
 
   const hintsLeft = gameMode !== 'story' && triviaState.cluesShown < mysteryHints(mystery).length;
   $('trivia-badge').textContent = hintsLeft ? t('Quick trivia · win a hint') : t('Quick trivia');
-  triviaCountryLbl.textContent  = isFlagRound
+  triviaCountryLbl.innerHTML  = isFlagRound
     ? 'Answer correctly to unlock the mystery country’s flag.'
-    : t('About your guess: {name}', { name: `${country.flag ? country.flag + ' ' : ''}${cname(country.name)}` });
-  triviaQuestionEl.textContent  = q.q;
+    : t('About your guess: {name}', { name: `${flagHtml(country, 20)} ${escHtml(cname(country.name))}` });
+  if (q.q && q.q.includes('Which country flies this flag')) {
+    const flagCountry = COUNTRIES.find(c => c.name === q.a) || resolveCountry(q.q);
+    if (flagCountry) {
+      triviaQuestionEl.innerHTML = `Which country flies this flag?<br>${flagHtml(flagCountry, 64, 'trivia-flag-img')}`;
+    } else {
+      triviaQuestionEl.textContent = q.q;
+    }
+  } else {
+    triviaQuestionEl.textContent  = q.q;
+  }
   triviaFeedback.hidden         = true;
   triviaContinueBtn.hidden      = true;
   $('trivia-skip-btn').hidden   = false;
@@ -3098,7 +3100,7 @@ const BANNER_KEY = 'pancake_banners';   // { day, id, rest, snooze: {id: ts}, di
 const BANNERS = {
   install: {
     icon: '📲', title: t('Never miss a Daily'),
-    body: t('Put Borderline on your home screen. One tap, full screen, works offline.'),
+    body: t('Put GlobeGame on your home screen. One tap, full screen, works offline.'),
     cta: t('Install'),
     eligible: () => !installBtn.hidden,              // shown only when installing is possible here
     act: () => installBtn.click(),

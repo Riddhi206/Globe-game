@@ -105,7 +105,7 @@ The streak is worked out locally today. Freezes need the server to know the stre
 
 ## 7. Decisions needed before building
 
-1. **Currency name.** "Coins" is fine. A themed name such as "Miles" or "Compass points" would fit Borderline better.
+1. **Currency name.** "Coins" is fine. A themed name such as "Miles" or "Compass points" would fit GlobeGame better.
 2. **Guest wallet on account switch.** Merge it into the existing account, or let it go. Merging is friendlier but needs a server function that moves the ledger rows.
 3. **Existing players.** Give a one-time welcome grant, back-pay for past badges and passport stamps, or start everyone at zero.
 4. **Rooms.** Whether game night prizes pay coins, and whether coins could ever be spent on room features.

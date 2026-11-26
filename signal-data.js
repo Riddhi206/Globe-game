@@ -82,7 +82,7 @@ const SIGNAL = {
       { m: 'I tried. Location says “disabled by your organisation”. No maps. No browser. No calls', mood: 'sad' },
       { m: 'Only this one chat app works. And the camera' },
       { m: 'Nobody even knows I’m gone' },
-      { m: 'My little sister Tara plays Borderline every night. She keeps the best players in a notebook' },
+      { m: 'My little sister Tara plays GlobeGame every night. She keeps the best players in a notebook' },
       { m: 'She sent me your number last week. She said “Didi, if you’re ever lost, ask {name}”', mood: 'sad' },
       { m: 'She said you found {best} in {bestN}. She was SO jealous', if: 'best' },
       { m: 'She said you’re the one who never gives up. She was SO jealous', if: 'noBest' },

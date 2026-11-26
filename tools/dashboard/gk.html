@@ -145,7 +145,7 @@
 <body>
 <header>
   <div class="bar">
-    <nav class="seg" aria-label="Dashboard"><a class="switch" href="/">🌍 Borderline</a><a class="switch on" href="/gk" aria-current="page">🎲 GameKatta</a></nav>
+    <nav class="seg" aria-label="Dashboard"><a class="switch" href="/">🌍 GlobeGame</a><a class="switch on" href="/gk" aria-current="page">🎲 GameKatta</a></nav>
     <span id="demo" class="badge" hidden>DEMO DATA</span>
     <span class="spacer"></span>
     <label class="site-pick">Site <select id="site"></select></label>
@@ -577,7 +577,7 @@ function render() {
   ]);
   table('#t-sharing', [{ label: 'Site', html: r => esc(siteName(r.site)) }, { label: 'Shares', key: 'shares', num: true }, { label: 'Visits via links', key: 'arrivals', num: true },
     { label: 'New players', key: 'new_players', num: true }, { label: 'New per 100', num: true, html: r => r.shares ? Math.round(100 * r.new_players / r.shares) : '—' }], sh);
-  table('#t-hub', [{ label: 'Game', html: r => esc(siteName(r.label) === r.label && r.label === 'borderline' ? 'Borderline' : siteName(r.label)) },
+  table('#t-hub', [{ label: 'Game', html: r => esc(siteName(r.label) === r.label && r.label === 'borderline' ? 'GlobeGame' : siteName(r.label)) },
     { label: 'Where', html: r => r.place === 'today' ? 'Aaj ka Katta row' : 'Game card' }, { label: 'Taps', key: 'clicks', num: true }, { label: 'Players', key: 'players', num: true }], d.hubClicks);
 
   // ---- Tech & errors

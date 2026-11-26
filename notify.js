@@ -183,10 +183,10 @@ const Notify = (() => {
 
   function blockedSteps() {
     const p = platform();
-    if (p === 'ios-pwa') return ['Open the iPhone <b>Settings</b> app', 'Tap <b>Notifications</b>, then <b>Borderline</b>', 'Turn on <b>Allow Notifications</b>'];
-    if (p === 'android-pwa') return ['Long-press the Borderline icon, tap <b>App info</b>', 'Tap <b>Notifications</b> and turn them on'];
+    if (p === 'ios-pwa') return ['Open the iPhone <b>Settings</b> app', 'Tap <b>Notifications</b>, then <b>GlobeGame</b>', 'Turn on <b>Allow Notifications</b>'];
+    if (p === 'android-pwa') return ['Long-press the GlobeGame icon, tap <b>App info</b>', 'Tap <b>Notifications</b> and turn them on'];
     if (p === 'android') return ['Tap the <b>⋮</b> or the icon left of the address bar', 'Tap <b>Permissions</b> (or <b>Site settings</b>) → <b>Notifications</b>', 'Choose <b>Allow</b>, then come back here'];
-    if (p === 'mac-safari') return ['Safari menu → <b>Settings</b> → <b>Websites</b> → <b>Notifications</b>', 'Set Borderline to <b>Allow</b>'];
+    if (p === 'mac-safari') return ['Safari menu → <b>Settings</b> → <b>Websites</b> → <b>Notifications</b>', 'Set GlobeGame to <b>Allow</b>'];
     return ['Click the icon left of the address bar', 'Set <b>Notifications</b> to <b>Allow</b>', 'Reload the page'];
   }
 
@@ -221,16 +221,16 @@ const Notify = (() => {
       buttons = `<button type="button" class="btn ghost" id="push-later-btn">Not now</button><button type="button" class="btn primary" id="push-enable-btn">Turn on reminders</button>`;
     } else if (s === 'ios-install') {
       $('push-title').textContent = 'Reminders on iPhone';
-      html = `<p class="push-lead">iPhone only sends notifications to apps on your Home Screen. It takes 10 seconds, and Borderline opens full-screen from then on:</p>
-        ${steps(['Tap <b>Share</b> <span class="push-ios-share" aria-hidden="true">⬆︎</span> in Safari’s toolbar', 'Tap <b>Add to Home Screen</b>, then <b>Add</b>', 'Open Borderline from your Home Screen and tap <b>Turn on reminders</b>'])}`;
+      html = `<p class="push-lead">iPhone only sends notifications to apps on your Home Screen. It takes 10 seconds, and GlobeGame opens full-screen from then on:</p>
+        ${steps(['Tap <b>Share</b> <span class="push-ios-share" aria-hidden="true">⬆︎</span> in Safari’s toolbar', 'Tap <b>Add to Home Screen</b>, then <b>Add</b>', 'Open GlobeGame from your Home Screen and tap <b>Turn on reminders</b>'])}`;
       buttons = `<button type="button" class="btn primary" id="push-close-btn">Got it</button>`;
     } else if (s === 'ios-old') {
       $('push-title').textContent = 'Reminders on iPhone';
-      html = `<p class="push-lead">Notifications for web apps need iOS 16.4 or newer. Update in <b>Settings → General → Software Update</b>, then add Borderline to your Home Screen.</p>`;
+      html = `<p class="push-lead">Notifications for web apps need iOS 16.4 or newer. Update in <b>Settings → General → Software Update</b>, then add GlobeGame to your Home Screen.</p>`;
       buttons = `<button type="button" class="btn primary" id="push-close-btn">OK</button>`;
     } else if (s === 'inapp') {
       $('push-title').textContent = 'Open in your browser';
-      html = `<p class="push-lead">This app’s built-in browser can’t show notifications. Open Borderline in ${isIOS ? 'Safari' : 'Chrome'} (tap <b>⋯</b> → <b>Open in browser</b>), or copy the link.</p>`;
+      html = `<p class="push-lead">This app’s built-in browser can’t show notifications. Open GlobeGame in ${isIOS ? 'Safari' : 'Chrome'} (tap <b>⋯</b> → <b>Open in browser</b>), or copy the link.</p>`;
       buttons = `<button type="button" class="btn" id="push-copy-btn">Copy link</button><button type="button" class="btn primary" id="push-close-btn">OK</button>`;
     } else if (s === 'blocked') {
       $('push-title').textContent = 'Notifications are blocked';

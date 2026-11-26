@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0c0c0d" />
   <meta name="color-scheme" content="dark light" />
   <meta name="description" content="Find the mystery country on the globe. Every guess shows how close you are — blue means far, dark red means very close." />
-  <title>Borderline — Guess the Country on the Globe</title>
+  <title>GlobeGame — Guess the Country on the Globe</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" />
@@ -15,14 +15,20 @@
   <link rel="stylesheet" href="story.css" />
   <link rel="stylesheet" href="signal.css" />
   <link rel="stylesheet" href="name-step.css" />
-  <meta property="og:title" content="Borderline — Guess the Country on the Globe" />
+  <meta property="og:title" content="GlobeGame — Guess the Country on the Globe" />
   <meta property="og:description" content="Find the mystery country on the globe. A new Daily every day." />
+  <meta property="og:image" content="icons/icon-512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="GlobeGame — Guess the Country on the Globe" />
+  <meta name="twitter:description" content="Find the mystery country on the globe. A new Daily every day." />
+  <meta name="twitter:image" content="icons/icon-512.png" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Borderline" />
+  <meta name="apple-mobile-web-app-title" content="GlobeGame" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png" />
 </head>
@@ -33,7 +39,7 @@
         <button id="back-btn" class="icon-btn" aria-label="Back to home" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
         </button>
-        <span class="brand"><img class="logo-dark" src="icons/logo-dark.svg" alt="Borderline" /><img class="logo-light" src="icons/logo-light.svg" alt="Borderline" /></span>
+        <span class="brand"><img class="logo-dark" src="icons/logo-dark.svg" alt="GlobeGame" /><img class="logo-light" src="icons/logo-light.svg" alt="GlobeGame" /></span>
       </div>
       <div class="topbar-actions">
         <button id="atlas-btn" class="icon-btn" aria-label="Atlas: every country named" title="Atlas: every country named">
@@ -58,7 +64,7 @@
     <!-- Home -->
     <main id="home-screen" class="screen">
       <section class="hero">
-        <h1 class="hero-logo"><img class="logo-dark" src="icons/logo-dark.svg" alt="Borderline" /><img class="logo-light" src="icons/logo-light.svg" alt="Borderline" /></h1>
+        <h1 class="hero-logo"><img class="logo-dark" src="icons/logo-dark.svg" alt="GlobeGame" /><img class="logo-light" src="icons/logo-light.svg" alt="GlobeGame" /></h1>
         <p id="hero-tagline">Find the mystery country on the globe. Every guess tells you how close you are.</p>
       </section>
 
@@ -146,7 +152,7 @@
       <button id="home-save-btn" class="link-btn" hidden>Save your progress across devices</button>
 
       <!-- The way back to the GameKatta hub: players who came from there had none -->
-      <a id="gk-home" class="gk-home" href="https://gamekatta.com/?utm_source=borderline&amp;utm_medium=back"><svg class="pip" viewBox="0 0 64 64" aria-hidden="true"><rect x="5" y="5" width="54" height="54" rx="15" fill="#ffc531" stroke="#1d1430" stroke-width="5" transform="rotate(-8 32 32)"/><g transform="rotate(-8 32 32)" fill="#1d1430"><circle cx="23" cy="25" r="4.5"/><circle cx="41" cy="25" r="4.5"/><path d="M20 37 Q32 49 44 37" fill="none" stroke="#1d1430" stroke-width="5" stroke-linecap="round"/></g></svg><span>More games on GameKatta</span><span aria-hidden="true">→</span></a>
+      <a id="gk-home" class="gk-home" href="https://gamekatta.com/?utm_source=globegame&amp;utm_medium=back"><svg class="pip" viewBox="0 0 64 64" aria-hidden="true"><rect x="5" y="5" width="54" height="54" rx="15" fill="#ffc531" stroke="#1d1430" stroke-width="5" transform="rotate(-8 32 32)"/><g transform="rotate(-8 32 32)" fill="#1d1430"><circle cx="23" cy="25" r="4.5"/><circle cx="41" cy="25" r="4.5"/><path d="M20 37 Q32 49 44 37" fill="none" stroke="#1d1430" stroke-width="5" stroke-linecap="round"/></g></svg><span>More games on GameKatta</span><span aria-hidden="true">→</span></a>
 
       <footer class="home-footer"><button type="button" id="feedback-btn" class="footer-link">Feedback</button><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></footer>
     </main>
@@ -852,11 +858,11 @@
 
   <!-- Install (iPhone / iPad: no install prompt, so explain the steps) -->
   <dialog id="install-dialog" class="sheet" aria-labelledby="install-title">
-    <h2 id="install-title" class="sheet-title">Install Borderline</h2>
+    <h2 id="install-title" class="sheet-title">Install GlobeGame</h2>
     <ol class="help-steps">
       <li>Tap the <b>Share</b> button in Safari’s toolbar.</li>
       <li>Scroll down and tap <b>Add to Home Screen</b>.</li>
-      <li>Tap <b>Add</b>. Borderline opens full-screen and works offline.</li>
+      <li>Tap <b>Add</b>. GlobeGame opens full-screen and works offline.</li>
     </ol>
     <div class="sheet-actions">
       <button id="install-close-btn" class="btn primary">Got it</button>

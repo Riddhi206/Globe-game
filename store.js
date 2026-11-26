@@ -2,7 +2,7 @@
 // The device is the source of truth; cloud.js uploads games to Supabase
 // and merges in games played on other devices.
 
-const APP_NAME     = 'Borderline';
+const APP_NAME     = 'GlobeGame';
 const STORE_KEY    = 'pancake_store_v2';
 const CURRENT_KEY  = 'pancake_current_v2';
 const THEME_KEY    = 'pancake_theme';

@@ -466,7 +466,7 @@ const STORY = {
 
   credits: [
     "THE UNMAKING",
-    "A Borderline story",
+    "A GlobeGame story",
     "Starring Needle, as herself",
     "And you, {name}, as the Lampbearer",
     "No countries were permanently harmed.",

@@ -1,6 +1,6 @@
 {
-  "name": "Borderline — Guess the Country",
-  "short_name": "Borderline",
+  "name": "GlobeGame — Guess the Country",
+  "short_name": "GlobeGame",
   "description": "Find the mystery country on the globe. A new Daily every day.",
   "start_url": "./",
   "scope": "./",

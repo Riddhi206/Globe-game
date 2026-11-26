@@ -6,7 +6,7 @@
   const DRAFT_KEY = 'borderline_feedback_draft';
   const HINTS = {
     bug:   'What happened, and what did you expect? Which screen were you on?',
-    idea:  'What would make Borderline more fun for you?',
+    idea:  'What would make GlobeGame more fun for you?',
     other: 'Anything at all. We read every message.',
   };
   const dialog = $('feedback-dialog'), text = $('feedback-text'), contact = $('feedback-contact');

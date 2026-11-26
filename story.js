@@ -873,7 +873,7 @@ function showPostcard(chapter, onNext) {
   const foilEl = document.getElementById('story-postcard-foil');
   if (!wrap) { onNext(); return; }
 
-  flagEl.textContent = country?.flag || '';
+  flagEl.innerHTML = country ? flagHtml(country, 64) : '';
   nameEl.textContent = country?.name || '';
   const facts = (typeof countryFacts === 'function' && country) ? countryFacts(country.name) : null;
   factsEl.textContent = facts ? `🏙️ ${facts.capital || '—'} · 👥 ~${facts.population || '—'}` : '';
@@ -1516,7 +1516,7 @@ function openJournal() {
     const country = COUNTRIES.find(c => c.name === pc.country);
     const li = document.createElement('li');
     li.className = 'story-journal-card' + (pc.foil ? ' foil' : '');
-    const flag = document.createElement('div'); flag.className = 'story-journal-flag'; flag.textContent = country?.flag || '';
+    const flag = document.createElement('div'); flag.className = 'story-journal-flag'; flag.innerHTML = country ? flagHtml(country, 32) : '';
     const name = document.createElement('div'); name.className = 'story-journal-name'; name.textContent = pc.country || '';
     const chEl = document.createElement('div'); chEl.className = 'story-journal-ch'; chEl.textContent = ch ? `Chapter ${ch.n} · ${ch.title}` : '';
     const seal = document.createElement('button');

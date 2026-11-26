@@ -1,4 +1,4 @@
-# Pancake 🥞
+# GlobeGame 🌍
 
 Find the mystery country on the globe. Every guess lights up with a colour showing how close you are — the warmer, the nearer.
 
@@ -34,7 +34,7 @@ Pure HTML, CSS and JavaScript — no frameworks, no build step.
 **Notifications** (once set up, see `docs/PUSH.md`): a Daily reminder at each player's chosen time, a
 streak saver before the 00:00 UTC reset, come-back nudges after 3, 7 and 14 days away, and alerts for
 friend requests, room challenges and game nights. Asked for only after a Daily or joining a room, never
-on the first visit; works on Android, desktop and iPhones with Borderline on the Home Screen (iOS 16.4+).
+on the first visit; works on Android, desktop and iPhones with GlobeGame on the Home Screen (iOS 16.4+).
 
 **Captain Reed** is the game's guide: the worst navigator on the Seven Seas, lost aboard *The Wrong
 Way* for 300 years, with Gerald, his deadpan parrot. Every morning his map shows a new mystery land; he

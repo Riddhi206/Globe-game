@@ -1,6 +1,6 @@
 # Push notifications
 
-Borderline sends Web Push notifications to bring players back: a Daily reminder, a streak saver,
+GlobeGame sends Web Push notifications to bring players back: a Daily reminder, a streak saver,
 come-back nudges, and alerts for friend requests, room challenges and game nights. This page covers
 what gets sent and when, which devices can receive it, and how to switch it on.
 
@@ -31,7 +31,7 @@ Guard rails:
 | Android: Chrome, Samsung Internet, Edge, Firefox | ✅ In the browser, installed or not | Our sheet → **Turn on reminders** → the browser's Allow prompt |
 | Android, installed app (added to the home screen) | ✅ | Same. Notifications are listed under the app in Android settings |
 | iPhone / iPad, Safari, **added to the Home Screen**, iOS 16.4+ | ✅ | Same, inside the home-screen app |
-| iPhone / iPad in Safari or Chrome, **not** added to the Home Screen | ❌ Apple doesn't allow it | Steps to add Borderline to the Home Screen (Share → Add to Home Screen → open it from there) |
+| iPhone / iPad in Safari or Chrome, **not** added to the Home Screen | ❌ Apple doesn't allow it | Steps to add GlobeGame to the Home Screen (Share → Add to Home Screen → open it from there) |
 | iPhone / iPad older than iOS 16.4 | ❌ | "Update iOS to 16.4 or newer" |
 | Desktop: Chrome, Edge, Firefox, Opera | ✅ | Our sheet → the browser's prompt |
 | Mac Safari 16+ (macOS Ventura and later) | ✅ | Same |

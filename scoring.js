@@ -390,12 +390,10 @@ async function buildShareImage(r) {
   do { g.font = font(700, hookPx); hookPx -= 2; } while (g.measureText(hook).width > 980 && hookPx > 24);
   g.fillText(hook, S / 2, scoreY + 80);
 
-  const url = shareUrl().replace(/^https?:\/\//, '').replace(/\/$/, '');
-  if (url) {
-    g.fillStyle = '#6a6a70';
-    g.font = font(600, 36);
-    g.fillText(url, S / 2, 1030);
-  }
+  const url = shareUrl().replace(/^https?:\/\//, '').replace(/\/$/, '') || 'globegame';
+  g.fillStyle = '#6a6a70';
+  g.font = font(600, 36);
+  g.fillText(url, S / 2, 1030);
 
   return new Promise(resolve => c.toBlob(resolve, 'image/png'));
 }
@@ -416,8 +414,8 @@ function finishRadarImage(c, g, r, font) {
   let px = 40;
   do { g.font = font(700, px); px -= 2; } while (g.measureText(hook).width > 980 && px > 24);
   g.fillText(hook, S / 2, 960);
-  const url = shareUrl().replace(/^https?:\/\//, '').replace(/\/$/, '');
-  if (url) { g.fillStyle = '#6a6a70'; g.font = font(600, 34); g.fillText(url, S / 2, 1035); }
+  const url = shareUrl().replace(/^https?:\/\//, '').replace(/\/$/, '') || 'globegame';
+  g.fillStyle = '#6a6a70'; g.font = font(600, 34); g.fillText(url, S / 2, 1035);
   return new Promise(resolve => c.toBlob(resolve, 'image/png'));
 }
 
@@ -463,7 +461,7 @@ async function shareResult(r, how) {
   if (how === 'image') {
     const blob = await buildShareImage(r);
     if (!blob) return showToast(t('Could not create image'));
-    const file = new File([blob], `pancake-${r.mode}.png`, { type: 'image/png' });
+    const file = new File([blob], `globegame-${r.mode}.png`, { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try { await navigator.share({ files: [file], text }); return; }
       catch (err) { if (err.name === 'AbortError') return; }

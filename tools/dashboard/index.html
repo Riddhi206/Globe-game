@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Borderline analytics</title>
+<title>GlobeGame analytics</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root {
@@ -140,8 +140,8 @@
 <body>
 <header>
   <div class="bar">
-    <h1>🌍 Borderline analytics</h1>
-    <nav class="seg" aria-label="Dashboard"><a class="switch on" href="/" aria-current="page">🌍 Borderline</a><a class="switch" href="/gk">🎲 GameKatta</a></nav>
+    <h1>🌍 GlobeGame analytics</h1>
+    <nav class="seg" aria-label="Dashboard"><a class="switch on" href="/" aria-current="page">🌍 GlobeGame</a><a class="switch" href="/gk">🎲 GameKatta</a></nav>
     <span id="demo" class="badge" hidden>DEMO DATA</span>
     <span class="spacer"></span>
     <div class="seg" role="group" aria-label="Time range">
@@ -920,7 +920,7 @@ function exportPdf() {
   last = SNAP ? last : { ...last, data: forExport(last.data, names) };
   document.documentElement.dataset.theme = 'light';
   document.body.classList.add('printing');
-  $('#print-head').innerHTML = `<h1>🌍 Borderline analytics</h1>
+  $('#print-head').innerHTML = `<h1>🌍 GlobeGame analytics</h1>
     <p>${RANGE_NAME[last.range]} · compared with the ${RANGE_NAME[last.range].toLowerCase().replace('last ', 'previous ')}
     · data from ${esc(stamp(last.generatedAt))} · days and hours in IST${last.demo ? ' · <b>DEMO DATA</b>' : ''}</p>`;
   document.querySelectorAll('[data-panel]').forEach(p => {
@@ -931,7 +931,7 @@ function exportPdf() {
     }
   });
   render();
-  document.title = `Borderline analytics · ${RANGE_NAME[last.range]} · ${new Date().toISOString().slice(0, 10)}`;   // the PDF's file name
+  document.title = `GlobeGame analytics · ${RANGE_NAME[last.range]} · ${new Date().toISOString().slice(0, 10)}`;   // the PDF's file name
   const restore = () => {
     window.removeEventListener('afterprint', restore);
     last = real; document.title = title;
@@ -970,7 +970,7 @@ async function exportHtml() {
     html = html.replace('<' + '!--SNAPSHOT-->', () => `<script>window.SNAPSHOT = ${JSON.stringify(snap).replace(/</g, '\\u003c')};${END}`);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-    a.download = `borderline-analytics-${new Date().toISOString().slice(0, 10)}.html`;
+    a.download = `globegame-analytics-${new Date().toISOString().slice(0, 10)}.html`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
     $('#export').open = false;
@@ -995,7 +995,7 @@ if (SNAP) {
   $('#snapshot').hidden = false;
   $('#snapshot').textContent = 'Snapshot · ' + stamp(SNAP.generatedAt);
   $('#updated').textContent = SNAP.names ? '' : 'Player and room names hidden';
-  document.title = 'Borderline analytics · snapshot ' + SNAP.generatedAt.slice(0, 10);
+  document.title = 'GlobeGame analytics · snapshot ' + SNAP.generatedAt.slice(0, 10);
 }
 setTab(tab);
 setRange(range);

@@ -59,7 +59,7 @@ function foundingSince(games) {
 
 const BADGES = [
   { id: 'founding-player', special: true, limited: true, icon: '🏅', title: 'Founding Player',
-    desc: `Played Borderline before ${FOUNDING_LABEL}.`,
+    desc: `Played GlobeGame before ${FOUNDING_LABEL}.`,
     goal: 1,  value: g => foundingGames(g).length ? 1 : 0 },
   { id: 'first-find',  icon: '📍', title: 'First Find',     desc: 'Find your first mystery country.',
     goal: 1,  value: g => wonOf(g).length },
@@ -174,8 +174,9 @@ function renderBadgeCard() {
   const got = states.filter(x => x.unlocked).length;
   badgeDialog.classList.toggle('special', !!b.special);
   $('bc-kicker-text').textContent = b.special ? 'Limited edition badge' : 'Badge unlocked';
-  // The special badge wears the Borderline mark instead of an emoji
-  if (b.special) $('bc-icon').innerHTML = '<img src="icons/mark-dark.svg" alt="">';
+  // The special badge wears the GlobeGame mark instead of an emoji
+  const markSrc = document.documentElement.dataset.theme === 'light' ? 'icons/mark-light.svg' : 'icons/mark-dark.svg';
+  if (b.special) $('bc-icon').innerHTML = `<img src="${markSrc}" alt="">`;
   else $('bc-icon').textContent = b.icon;
   $('bc-title').textContent = b.title;
   $('bc-desc').textContent  = b.desc;
@@ -230,7 +231,7 @@ async function shareFounding() {
   const since = foundingSince(loadStore().games);
   const text = foundingShareText(since);
   const blob = await buildFoundingImage(since);
-  const file = blob && new File([blob], 'borderline-founding-player.png', { type: 'image/png' });
+  const file = blob && new File([blob], 'globegame-founding-player.png', { type: 'image/png' });
   if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file], text }); return; } catch (e) { if (e.name === 'AbortError') return; }
   }
@@ -278,7 +279,7 @@ async function buildFoundingImage(since) {
   g.fillText(`Here since Daily #${since} · before ${FOUNDING_LABEL}`, S / 2, 870);
 
   const logo = await loadImage('icons/logo-dark.svg');
-  if (logo) g.drawImage(logo, S / 2 - 160, 940, 320, 320 * 172 / 796);
+  if (logo) g.drawImage(logo, S / 2 - 160, 940, 320, 320 * 172 / 860);
   return new Promise(resolve => c.toBlob(resolve, 'image/png'));
 }
 // Escape closes the card: the badge on screen counts as seen, any others wait for next time
@@ -312,7 +313,7 @@ function renderPassport() {
 
   // Found countries show their flag and name; the rest stay as "?" so the mystery holds
   $('pp-grid').innerHTML = COUNTRIES.map(c => p.found.has(c.name)
-    ? `<div class="pp-stamp found" title="${escHtml(c.name)}"><span>${c.flag}</span><small>${escHtml(c.name)}</small></div>`
+    ? `<div class="pp-stamp found" title="${escHtml(c.name)}"><span>${flagHtml(c, 28)}</span><small>${escHtml(c.name)}</small></div>`
     : `<div class="pp-stamp"><span>?</span></div>`
   ).join('');
 
@@ -320,9 +321,10 @@ function renderPassport() {
   const got = badges.filter(b => b.unlocked).length;
   $('badge-count').textContent = `${got} of ${badges.length} unlocked`;
   const daysLeft = Math.max(1, Math.ceil((FOUNDING_CUTOFF - Date.now()) / 86400000));
+  const mark = document.documentElement.dataset.theme === 'light' ? 'icons/mark-light.svg' : 'icons/mark-dark.svg';
   $('badge-list').innerHTML = badges.map((b, i) =>
     `<li class="${b.unlocked ? 'got' : ''}${b.special ? ' special' : ''}" data-i="${i}" role="button" tabindex="0" aria-label="${b.title}${b.unlocked ? '' : ', locked'}">` +
-    `<span class="b-icon">${!b.unlocked ? '🔒' : b.special ? '<img src="icons/mark-dark.svg" alt="">' : b.icon}</span>` +
+    `<span class="b-icon">${!b.unlocked ? '🔒' : b.special ? `<img src="${mark}" alt="">` : b.icon}</span>` +
     `<div class="b-text"><b>${b.title}</b><span class="muted">${b.desc}</span>` +
     (b.id === 'founding-player' && b.unlocked ? `<small class="b-special">Here since Daily #${foundingSince(games)}</small>` : '') +
     (b.id === 'founding-player' && !b.unlocked ? `<small class="b-special">Closes in ${daysLeft} day${daysLeft === 1 ? '' : 's'}</small>` : '') +
@@ -341,8 +343,9 @@ let badgeListScroll = 0;
 
 function trophySlide(b) {
   const games = loadStore().games;
+  const mark = document.documentElement.dataset.theme === 'light' ? 'icons/mark-light.svg' : 'icons/mark-dark.svg';
   const icon = !b.unlocked ? `<span class="trophy-locked-icon">${b.special ? '🏅' : b.icon}</span>`
-             : b.special ? '<img src="icons/mark-dark.svg" alt="">' : b.icon;
+             : b.special ? `<img src="${mark}" alt="">` : b.icon;
   const kicker = b.special ? 'Limited edition' : b.unlocked ? 'Unlocked' : 'Locked';
   let extra = '';
   if (b.id === 'founding-player' && b.unlocked) extra = `<p class="bc-special">Here since Daily #${foundingSince(games)}</p>`;

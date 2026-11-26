@@ -208,3 +208,86 @@ function getCountryFlag(countryName) {
   const c = COUNTRIES.find(x => x.name.toLowerCase() === lower);
   return c ? c.flag : "";
 }
+
+// ============================================================
+// Unified Flag Helpers
+// Crisp CDN flag images across all platforms (including Windows where
+// Unicode emoji flags render as ugly letter-code boxes [U][S]).
+// ============================================================
+function flagUrl(code, size = 40) {
+  if (!code) return '';
+  const c = code.toLowerCase();
+  return `https://flagcdn.com/w${size}/${c}.png`;
+}
+
+function resolveCountry(val) {
+  if (!val) return null;
+  if (typeof val === 'object' && (val.code || val.name || val.flag)) {
+    if (val.code && val.name && val.flag) return val;
+    if (val.code) {
+      const match = COUNTRIES.find(c => c.code.toLowerCase() === val.code.toLowerCase());
+      if (match) return match;
+    }
+    if (val.name) {
+      const match = COUNTRIES.find(c => c.name.toLowerCase() === val.name.toLowerCase());
+      if (match) return match;
+    }
+    return val;
+  }
+  const str = String(val).trim();
+  if (!str) return null;
+  if (str.length === 2) {
+    const byCode = COUNTRIES.find(c => c.code.toLowerCase() === str.toLowerCase());
+    if (byCode) return byCode;
+  }
+  const lower = str.toLowerCase();
+  const byName = COUNTRIES.find(c => c.name.toLowerCase() === lower);
+  if (byName) return byName;
+  const byFlag = COUNTRIES.find(c => c.flag === str);
+  if (byFlag) return byFlag;
+  return null;
+}
+
+function makeFlagImg(countryOrCode, size = 20, className = 'country-flag') {
+  const c = resolveCountry(countryOrCode);
+  const code = (c ? c.code : (typeof countryOrCode === 'string' && countryOrCode.length === 2 ? countryOrCode : '')).toLowerCase();
+  const img = document.createElement('img');
+  img.className = className;
+  if (code && code.length === 2) {
+    const w = size <= 20 ? 20 : size <= 40 ? 40 : size <= 80 ? 80 : 160;
+    img.src = flagUrl(code, w);
+    img.srcset = `${flagUrl(code, w)} 1x, ${flagUrl(code, Math.min(160, w * 2))} 2x`;
+    img.width = size;
+    img.height = Math.round(size * 0.75);
+    img.alt = (c && c.flag) || (c && c.name) || code.toUpperCase();
+    img.loading = 'lazy';
+    img.onerror = () => {
+      if (c && c.flag) {
+        const span = document.createElement('span');
+        span.className = className;
+        span.textContent = c.flag;
+        if (img.parentNode) img.parentNode.replaceChild(span, img);
+      } else {
+        img.style.display = 'none';
+      }
+    };
+  } else if (c && c.flag) {
+    img.alt = c.flag;
+  }
+  return img;
+}
+
+function flagHtml(countryOrCode, size = 20, className = 'country-flag') {
+  const c = resolveCountry(countryOrCode);
+  const code = (c ? c.code : (typeof countryOrCode === 'string' && countryOrCode.length === 2 ? countryOrCode : '')).toLowerCase();
+  if (!code || code.length !== 2) {
+    return c && c.flag ? `<span class="${className}">${c.flag}</span>` : '';
+  }
+  const w = size <= 20 ? 20 : size <= 40 ? 40 : size <= 80 ? 80 : 160;
+  const h = Math.round(size * 0.75);
+  const alt = (c && (c.flag || c.name)) || code.toUpperCase();
+  const src = flagUrl(code, w);
+  const srcset = `${flagUrl(code, w)} 1x, ${flagUrl(code, Math.min(160, w * 2))} 2x`;
+  const fallback = c && c.flag ? c.flag : '';
+  return `<img class="${className}" src="${src}" srcset="${srcset}" width="${size}" height="${h}" alt="${alt}" loading="lazy" onerror="this.onerror=null;${fallback ? `this.replaceWith(document.createTextNode('${fallback}'))` : `this.style.display='none'`}" />`;
+}

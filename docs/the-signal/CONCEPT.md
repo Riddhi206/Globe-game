@@ -112,5 +112,5 @@ The Signal wins on hook strength, shareability and daily rhythm.
 1. **Tone:** thriller (The Signal), or cosy (Atlas Academy)?
 2. **Cadence:** one episode a day for everyone, or let new players catch up up to 3 a day?
 3. **Choices:** world majority decides canon (recommended), or each player branches privately?
-4. **Name:** "The Signal", or something more Borderline-flavoured?
+4. **Name:** "The Signal", or something more GlobeGame-flavoured?
 5. **Pilot first:** 3 episodes and measure, or commit to the full season?

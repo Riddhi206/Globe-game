@@ -638,7 +638,45 @@ dialog.sheet::backdrop { background: var(--backdrop); backdrop-filter: blur(3px)
   color: var(--text); display: flex; align-items: center; justify-content: center;
 }
 .result-x:hover { border-color: var(--muted); }
-.result-flag { font-size: 3.2rem; line-height: 1; margin-top: 2px; }
+.country-flag {
+  display: inline-block;
+  vertical-align: -2px;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+.result-flag { font-size: 3.2rem; line-height: 1; margin-top: 2px; display: flex; justify-content: center; align-items: center; min-height: 54px; }
+.result-flag-img {
+  height: 52px;
+  width: auto;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  display: block;
+  margin: 0 auto;
+}
+.trivia-flag-img {
+  display: block;
+  margin: 10px auto 14px;
+  height: 56px;
+  width: auto;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+.pp-stamp .country-flag {
+  width: 28px;
+  height: 21px;
+}
+.story-postcard-flag .country-flag {
+  width: 64px;
+  height: 48px;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+.story-journal-flag .country-flag {
+  width: 32px;
+  height: 24px;
+  border-radius: 3px;
+}
 .result-kicker { margin-top: 10px; font-weight: 800; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; }
 .result-kicker.won { color: var(--correct-ink); }
 .result-country { font-size: 2.4rem; font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; margin-top: 2px; }

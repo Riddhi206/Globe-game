@@ -84,7 +84,7 @@ function roomTile(r, size = '') {
   const h = roomHue(r.name);
   return `<span class="room-tile ${size}" style="--h1:${h};--h2:${(h + 50) % 360}" aria-hidden="true">${escHtml(r.emoji || '🌍')}</span>`;
 }
-const flagOf = name => (COUNTRIES.find(c => c.name === name) || {}).flag || '';
+const flagOf = name => flagHtml(COUNTRIES.find(c => c.name === name) || name, 20);
 
 const Rooms = {
   list: [],          // my_rooms()
@@ -499,7 +499,7 @@ const Rooms = {
   shareInvite() {
     const r = this.room.room;
     const url = roomInviteUrl(r.code);
-    const text = `Join my room “${r.name}” on Borderline 🌍 We race the Daily, run 5-country challenges and game nights. Code ${r.code}`;
+    const text = `Join my room “${r.name}” on GlobeGame 🌍 We race the Daily, run 5-country challenges and game nights. Code ${r.code}`;
     track('room_invite_share', {});
     if (navigator.share) { navigator.share({ text, url }).catch(() => {}); return; }
     navigator.clipboard.writeText(`${text}\n${url}`).then(() => showToast('Invite link copied')).catch(() => showToast(url));
@@ -664,7 +664,7 @@ const Rooms = {
     const n = this.night, s = n && n.state;
     if (!s) return;
     const host = s.is_host && !n.tv;
-    const flag = name => (COUNTRIES.find(c => c.name === name) || {}).flag || '';
+    const flag = name => flagHtml(COUNTRIES.find(c => c.name === name) || name, 20);
     rq('night-room').textContent = s.room_name;
     const reveal = rq('night-reveal');
     reveal.hidden = true;
@@ -1037,8 +1037,8 @@ const Challenge = {
     const me = s.board.find(p => p.is_me) || { points: 0, found: 0 };
     const rank = s.board.indexOf(me) + 1;
     const text = s.my_done === 5
-      ? `I scored ${Number(me.points).toLocaleString()} in the ${t.icon} ${t.label}${s.speed ? ' speed' : ''} challenge on Borderline (${me.found}/5 found${rank === 1 && s.board.length > 1 ? ', #1 so far 👑' : ''}). Think you can beat me?`
-      : `I’m playing a ${t.icon} ${t.label} challenge on Borderline. 5 mystery countries, 24 hours. Join in:`;
+      ? `I scored ${Number(me.points).toLocaleString()} in the ${t.icon} ${t.label}${s.speed ? ' speed' : ''} challenge on GlobeGame (${me.found}/5 found${rank === 1 && s.board.length > 1 ? ', #1 so far 👑' : ''}). Think you can beat me?`
+      : `I’m playing a ${t.icon} ${t.label} challenge on GlobeGame. 5 mystery countries, 24 hours. Join in:`;
     const url = roomInviteUrl(s.room_code, s.id);
     track('challenge_share', { done: s.my_done });
     if (navigator.share) { navigator.share({ text, url }).catch(() => {}); return; }

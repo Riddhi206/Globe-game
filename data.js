@@ -526,12 +526,14 @@ const FLAG_TRIVIA_QUESTIONS = [
 function getFlagTriviaQuestion() {
   if (Math.random() < 0.6) {
     const q = FLAG_TRIVIA_QUESTIONS[Math.floor(Math.random() * FLAG_TRIVIA_QUESTIONS.length)];
-    return { ...q, isFlagHintTrivia: true };
+    const country = typeof COUNTRIES !== 'undefined' ? COUNTRIES.find(c => c.name === q.a) : null;
+    return { ...q, country, isFlagHintTrivia: true };
   } else if (typeof COUNTRIES !== 'undefined' && COUNTRIES.length > 0) {
     const c = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
     return {
       q: `Which country flies this flag: ${c.flag}?`,
       a: c.name,
+      country: c,
       isFlagHintTrivia: true,
     };
   } else {

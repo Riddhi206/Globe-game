@@ -199,7 +199,7 @@ const Tips = {
             <g transform="rotate(${deg} 32 32)"><path d="M32 23 L32 12" class="dt-line"/><path d="M27.5 14.5 L32 9 L36.5 14.5" class="dt-head"/></g>
             <g transform="rotate(${deg} 32 32) translate(32 5.5) rotate(${-deg})"><path d="M-3.5 -3.5 L3.5 3.5 M3.5 -3.5 L-3.5 3.5" class="dt-x"/></g>
             <circle cx="32" cy="32" r="8.5" class="dt-you" style="--c:${arrowEl.closest('li').style.getPropertyValue('--c')}"/>
-            <text x="32" y="36" class="dt-flag">${country.flag || ''}</text>
+            ${country.code ? `<image href="${flagUrl(country.code, 40)}" x="26" y="27.5" width="12" height="9" preserveAspectRatio="xMidYMid slice"/>` : `<text x="32" y="36" class="dt-flag">${country.flag || ''}</text>`}
           </svg>
           <span><b>${t('{arrow} The mystery country is {dir} of {name}.', { arrow: ARROWS[bearing], dir: bearingWord(bearing).replace('-', '‑'), name })}</b>
           ${t('Arrows point toward it. North is up.')}</span>

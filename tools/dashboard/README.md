@@ -1,4 +1,4 @@
-# Borderline analytics dashboard
+# GlobeGame analytics dashboard
 
 A local page that reads the Supabase database directly and turns it into growth numbers.
 Pick a time range at the top; every headline figure is compared with the period before it (▲▼).

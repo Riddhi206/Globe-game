@@ -7,11 +7,11 @@
 
 const CACHE = 'pancake-v41';
 const SHELL = [
-  './', 'index.html', 'style.css', 'story.css', 'signal.css', 'name-step.css', 'privacy.html', 'manifest.webmanifest',
+  './', 'index.html', 'style.css', 'story.css', 'signal.css', 'name-step.css', 'privacy.html', 'manifest.webmanifest', 'favicon.ico',
   'i18n.js', 'countries.js', 'borders.js', 'data.js', 'trivia-options.js', 'country-facts.js', 'hints.js',
   'story-data.js', 'home-country.js', 'story-audio.js', 'story.js',
   'store.js', 'gk-session.js', 'cloud.js', 'analytics.js', 'scoring.js', 'name-step.js', 'coach.js', 'spyglass.js', 'rooms.js', 'game.js', 'progress.js', 'notify.js', 'feedback.js', 'signal-data.js', 'pin.js', 'signal.js',
-  'icons/icon-192.png', 'icons/badge-96.png', 'icons/favicon.svg', 'icons/logo-dark.svg', 'icons/logo-light.svg', 'icons/mark-dark.svg',
+  'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'icons/badge-96.png', 'icons/favicon.svg', 'icons/logo-dark.svg', 'icons/logo-light.svg', 'icons/mark-dark.svg', 'icons/mark-light.svg',
 ];
 const NETWORK_TIMEOUT_MS = 4000;
 
@@ -120,12 +120,12 @@ async function staleWhileRevalidate(req) {
 self.addEventListener('push', event => {
   let d = {};
   try { d = event.data ? event.data.json() : {}; } catch { d = { body: event.data ? event.data.text() : '' }; }
-  const title = d.title || 'Borderline';
+  const title = d.title || 'GlobeGame';
   const options = {
     body: d.body || 'A new mystery country is waiting.',
     icon: 'icons/icon-192.png',
     badge: 'icons/badge-96.png',            // Android status bar: white on transparent
-    tag: d.tag || d.kind || 'borderline',   // a newer one of the same kind replaces the old
+    tag: d.tag || d.kind || 'globegame',   // a newer one of the same kind replaces the old
     renotify: !!d.renotify,
     data: { url: d.url || './?s=push', kind: d.kind || '' },
     timestamp: Date.now(),
